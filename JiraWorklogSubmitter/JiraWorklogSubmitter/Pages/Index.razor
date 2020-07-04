@@ -1,0 +1,118 @@
+﻿@page "/"
+
+@using JiraWorklogSubmitter.Data
+@using Microsoft.Extensions.Options
+@inject TimeEntryService TimeEntryService
+@inject IOptions<JiraSettings> JiraSettings
+
+<h1>JIRA Time Log</h1>
+
+<p>Create Time Entries and then submit them</p>
+
+@if (_jiraWorklogEntries == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <EditForm Model="_jiraWorklogEntries" OnValidSubmit="HandleValidSubmitAsync">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <button type="button" class="btn btn-secondary" @onclick="AddNewTimeEntry">Add New Time Entry</button>
+        <button type="submit" class="btn btn-primary">Submit</button>
+        <table class="table table-sm table-responsive table-hover table-striped">
+            <thead>
+                <tr>
+                    <th>Ticket</th>
+                    <th>Time Spent</th>
+                    <th colspan="2">Comment</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var jiraWorklogEntry in _jiraWorklogEntries)
+                {
+                    <tr>
+                        <td>
+                            <InputText @bind-Value="jiraWorklogEntry.Ticket" placeholder="CTS-302" />
+                        </td>
+                        <td>
+                            <InputText @bind-Value="jiraWorklogEntry.TimeSpent" placeholder="1d 2h 3m" />
+                        </td>
+                        <td>
+                            <InputTextArea @bind-Value="jiraWorklogEntry.Comment" placeholder="Fixed things" spellcheck="true" />
+                        </td>
+                        <td>
+                            <button type="button"
+                                    class="btn btn-danger"
+                                    @onclick="@(e => DeleteEntry(jiraWorklogEntry))">
+                                <i class="far fa-times-circle"></i>
+                                Remove
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </EditForm>
+
+    @if (_jiraWorklogEntries.Any(jiraWorkLogEntry => !string.IsNullOrEmpty(jiraWorkLogEntry.Ticket)))
+    {
+        <ul>
+        <li>
+            Yesterday:
+            <ul>
+                @foreach (var jiraWorklogEntry in _jiraWorklogEntries.Where(jiraWorkLogEntry => !string.IsNullOrEmpty(jiraWorkLogEntry.Ticket)))
+                {
+                <li>
+                    <a href=@($"{JiraSettings.Value.BaseUrl}/browse/{jiraWorklogEntry.Ticket}")>
+                        @(jiraWorklogEntry.Ticket): @(jiraWorklogEntry.Summary)
+                    </a>
+                    @if (!string.IsNullOrEmpty(jiraWorklogEntry.Comment))
+                    {
+                        <ul>
+                            @* TODO: Foreach copy of this ticket (multiple entries submitted) make a new <li>Comment</li> *@
+                            <li>
+                                @jiraWorklogEntry.Comment
+                            </li>
+                        </ul>
+                    }
+                </li>
+                }
+            </ul>
+        </li>
+    </ul>
+    }
+}
+
+@code {
+    private readonly ICollection<JiraWorklogEntry> _jiraWorklogEntries = new List<JiraWorklogEntry>() { new JiraWorklogEntry() };
+
+    protected override async Task OnInitializedAsync()
+    {
+    }
+
+    private void AddNewTimeEntry()
+    {
+        var newTimeEntry = new JiraWorklogEntry();
+        _jiraWorklogEntries.Add(newTimeEntry);
+    }
+
+    private async Task HandleValidSubmitAsync()
+    {
+        // I believe this is still being called, even when a JiraWorklogEntry has invalid data, because I'm working with a collection of objects rather than individual objects.
+        // ".NET Core 3.1 Preview 2 introduces experimental support for object graph validation using data annotations" tells me that my list validation simply isn't supported yet.
+        Console.WriteLine("Handling Valid Submit");
+        await TimeEntryService.SubmitTimeLogAsync(_jiraWorklogEntries);
+    }
+
+    private void DeleteEntry(JiraWorklogEntry jiraWorklogEntry)
+    {
+        _jiraWorklogEntries.Remove(jiraWorklogEntry);
+    }
+
+    private async Task GetJiraTicketSummaryAsync(JiraWorklogEntry jiraWorklogEntry)
+    {
+        var result = await TimeEntryService.GetJiraTicketSummaryAsync(jiraWorklogEntry.Ticket);
+        jiraWorklogEntry.Summary = result;
+    }
+}

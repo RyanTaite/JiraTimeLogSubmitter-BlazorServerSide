@@ -1,0 +1,96 @@
+using System;
+using System.Net.Http.Headers;
+using System.Text;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using JiraWorklogSubmitter.Data;
+
+namespace JiraWorklogSubmitter
+{
+    public class Startup
+    {
+        public IConfiguration Configuration { get; }
+        public JiraSettings JiraSettings { get; private set; }
+
+        public Startup(IConfiguration configuration, IWebHostEnvironment env)
+        {
+            Configuration = configuration;
+
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(env.ContentRootPath)
+                //.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true, reloadOnChange: true)
+                .AddEnvironmentVariables()
+                .AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true);
+
+            Configuration = builder.Build();
+
+            JiraSettings = Configuration.GetSection(nameof(JiraSettings)).Get<JiraSettings>();
+        }
+
+        // This method gets called by the runtime. Use this method to add services to the container.
+        // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
+        public void ConfigureServices(IServiceCollection services)
+        {
+            // This enables us to inject JiraSettings into razor pages
+            services.Configure<JiraSettings>(Configuration.GetSection(nameof(JiraSettings)));
+
+            services.AddRazorPages();
+            services.AddServerSideBlazor();
+
+            AddSingletons(services);
+
+            services.AddHttpClient();
+            services.AddHttpClient("jira", client =>
+            {
+                client.BaseAddress = new Uri(JiraSettings.BaseUrl);   //TODO: Get this from appsettings.local.json
+                client.DefaultRequestHeaders.Add("Accept", "application/json");
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", GetEncodedEmailAndToken());
+            });
+        }
+
+        private void AddSingletons(IServiceCollection services)
+        {
+            services.AddSingleton<TimeEntryService>();
+        }
+
+        private string GetEncodedEmailAndToken()
+        {
+            var email = JiraSettings.Email;
+            var token = JiraSettings.Token;
+            var utf8EmailAndToken = Encoding.UTF8.GetBytes($"{email}:{token}");
+            var base64Utf8EmailAndToken = Convert.ToBase64String(utf8EmailAndToken);
+
+            return base64Utf8EmailAndToken;
+        }
+
+        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        {
+            if (env.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+            }
+            else
+            {
+                app.UseExceptionHandler("/Error");
+                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+                app.UseHsts();
+            }
+
+            app.UseHttpsRedirection();
+            app.UseStaticFiles();
+
+            app.UseRouting();
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapBlazorHub();
+                endpoints.MapFallbackToPage("/_Host");
+            });
+        }
+    }
+}
