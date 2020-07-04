@@ -1,8 +1,9 @@
 ﻿@page "/"
 
 @using JiraWorklogSubmitter.Data
+@using JiraWorklogSubmitter.Services.Interfaces
 @using Microsoft.Extensions.Options
-@inject TimeEntryService TimeEntryService
+@inject ITimeEntryService TimeEntryService
 @inject IOptions<JiraSettings> JiraSettings
 
 <h1>JIRA Time Log</h1>
@@ -58,29 +59,29 @@ else
     @if (_jiraWorklogEntries.Any(jiraWorkLogEntry => !string.IsNullOrEmpty(jiraWorkLogEntry.Ticket)))
     {
         <ul>
-        <li>
-            Yesterday:
-            <ul>
-                @foreach (var jiraWorklogEntry in _jiraWorklogEntries.Where(jiraWorkLogEntry => !string.IsNullOrEmpty(jiraWorkLogEntry.Ticket)))
-                {
-                <li>
-                    <a href=@($"{JiraSettings.Value.BaseUrl}/browse/{jiraWorklogEntry.Ticket}")>
-                        @(jiraWorklogEntry.Ticket): @(jiraWorklogEntry.Summary)
-                    </a>
-                    @if (!string.IsNullOrEmpty(jiraWorklogEntry.Comment))
+            <li>
+                Yesterday:
+                <ul>
+                    @foreach (var jiraWorklogEntry in _jiraWorklogEntries.Where(jiraWorkLogEntry => !string.IsNullOrEmpty(jiraWorkLogEntry.Ticket)))
                     {
-                        <ul>
-                            @* TODO: Foreach copy of this ticket (multiple entries submitted) make a new <li>Comment</li> *@
-                            <li>
-                                @jiraWorklogEntry.Comment
-                            </li>
-                        </ul>
+                        <li>
+                            <a href=@($"{JiraSettings.Value.BaseUrl}/browse/{jiraWorklogEntry.Ticket}")>
+                                @(jiraWorklogEntry.Ticket): @(jiraWorklogEntry.Summary)
+                            </a>
+                            @if (!string.IsNullOrEmpty(jiraWorklogEntry.Comment))
+                            {
+                                <ul>
+                                    @* TODO: Foreach copy of this ticket (multiple entries submitted) make a new <li>Comment</li> *@
+                                    <li>
+                                        @jiraWorklogEntry.Comment
+                                    </li>
+                                </ul>
+                            }
+                        </li>
                     }
-                </li>
-                }
-            </ul>
-        </li>
-    </ul>
+                </ul>
+            </li>
+        </ul>
     }
 }
 

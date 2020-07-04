@@ -6,10 +6,12 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
+using JiraWorklogSubmitter.Data;
+using JiraWorklogSubmitter.Services.Interfaces;
 
-namespace JiraWorklogSubmitter.Data
+namespace JiraWorklogSubmitter.Services
 {
-    public class TimeEntryService
+    public class TimeEntryService : ITimeEntryService
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<TimeEntryService> _logger;

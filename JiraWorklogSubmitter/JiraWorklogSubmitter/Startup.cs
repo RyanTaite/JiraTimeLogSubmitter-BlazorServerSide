@@ -7,6 +7,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using JiraWorklogSubmitter.Data;
+using JiraWorklogSubmitter.Services;
+using JiraWorklogSubmitter.Services.Interfaces;
 
 namespace JiraWorklogSubmitter
 {
@@ -21,7 +23,7 @@ namespace JiraWorklogSubmitter
 
             var builder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
-                //.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true, reloadOnChange: true)
                 .AddEnvironmentVariables()
                 .AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true);
@@ -41,7 +43,7 @@ namespace JiraWorklogSubmitter
             services.AddRazorPages();
             services.AddServerSideBlazor();
 
-            AddSingletons(services);
+            AddTransients(services);
 
             services.AddHttpClient();
             services.AddHttpClient("jira", client =>
@@ -52,9 +54,9 @@ namespace JiraWorklogSubmitter
             });
         }
 
-        private void AddSingletons(IServiceCollection services)
+        private void AddTransients(IServiceCollection services)
         {
-            services.AddSingleton<TimeEntryService>();
+            services.AddTransient<ITimeEntryService, TimeEntryService>();
         }
 
         private string GetEncodedEmailAndToken()
