@@ -32,7 +32,7 @@ namespace JiraWorklogSubmitter.Services
 
             foreach (var jiraWorklogEntry in jiraWorkLogEntries.Where(j => !string.IsNullOrEmpty(j.Ticket) && !string.IsNullOrEmpty(j.TimeSpent)))
             {
-                var worklogUrl = $"{_jiraSettings.Value.ApiUrl}{jiraWorklogEntry.Ticket}worklog";
+                var worklogUrl = $"{_jiraSettings.Value.ApiUrl}{jiraWorklogEntry.Ticket}/worklog";
 
                 var request = new HttpRequestMessage(HttpMethod.Post, worklogUrl);
 
