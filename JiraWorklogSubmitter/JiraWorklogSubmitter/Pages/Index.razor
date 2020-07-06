@@ -111,6 +111,7 @@ else
         _jiraWorklogEntries.Remove(jiraWorklogEntry);
     }
 
+    //TODO: Figure out how to call this as the tickets are entered
     private async Task GetJiraTicketSummaryAsync(JiraWorklogEntry jiraWorklogEntry)
     {
         var result = await TimeEntryService.GetJiraTicketSummaryAsync(jiraWorklogEntry.Ticket);

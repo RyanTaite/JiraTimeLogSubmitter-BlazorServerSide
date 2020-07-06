@@ -28,12 +28,8 @@ namespace JiraWorklogSubmitter.Services
 
         public async Task<string> SubmitTimeLogAsync(ICollection<JiraWorklogEntry> jiraWorkLogEntries)
         {
-            //TODO: Make a named httpClient for the jira site
             var httpClientFactory = _httpClientFactory.CreateClient("jira");
 
-            var test = await GetJiraTicketSummaryAsync(jiraWorkLogEntries.First().Ticket);
-
-            
             foreach (var jiraWorklogEntry in jiraWorkLogEntries.Where(j => !string.IsNullOrEmpty(j.Ticket) && !string.IsNullOrEmpty(j.TimeSpent)))
             {
                 var worklogUrl = $"{_jiraSettings.Value.ApiUrl}{jiraWorklogEntry.Ticket}worklog";
@@ -51,11 +47,9 @@ namespace JiraWorklogSubmitter.Services
                 request.Content = jiraWorkLogEntryHttpRequestContent;
 
                 _logger.LogDebug($"Attempting to submit: {jsonBody} to the url: {worklogUrl}");
+                using var httpResponse = await httpClientFactory.SendAsync(request);
 
-                //TURN OFF WHILE MESSING AROUND
-                //using var httpResponse = await httpClientFactory.SendAsync(request);
-
-                //var responseBody = httpResponse.EnsureSuccessStatusCode();
+                var responseBody = httpResponse.EnsureSuccessStatusCode();
             }
 
             return "Pretend this is a nicely formatted Teams message";
