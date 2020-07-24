@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using JiraWorklogSubmitter.Data;
+using JiraWorklogSubmitter.Config;
 using JiraWorklogSubmitter.Services;
 using JiraWorklogSubmitter.Services.Interfaces;
 
@@ -46,7 +46,7 @@ namespace JiraWorklogSubmitter
             AddTransients(services);
 
             services.AddHttpClient();
-            services.AddHttpClient("jira", client =>
+            services.AddHttpClient(HttpClientFactoryNameEmum.Jira.ToString(), client =>
             {
                 client.BaseAddress = new Uri(JiraSettings.BaseUrl);   //TODO: Get this from appsettings.local.json
                 client.DefaultRequestHeaders.Add("Accept", "application/json");

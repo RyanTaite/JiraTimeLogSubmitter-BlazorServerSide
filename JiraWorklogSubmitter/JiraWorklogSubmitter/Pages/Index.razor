@@ -1,5 +1,6 @@
 ﻿@page "/"
 
+@using JiraWorklogSubmitter.Config 
 @using JiraWorklogSubmitter.Data
 @using JiraWorklogSubmitter.Services.Interfaces
 @using Microsoft.Extensions.Options
@@ -19,41 +20,56 @@ else
     <EditForm Model="_jiraWorklogEntries" OnValidSubmit="HandleValidSubmitAsync">
         <DataAnnotationsValidator />
         <ValidationSummary />
-        <button type="button" class="btn btn-secondary" @onclick="AddNewTimeEntry">Add New Time Entry</button>
-        <button type="submit" class="btn btn-primary">Submit</button>
-        <table class="table table-sm table-responsive table-hover table-striped">
-            <thead>
-                <tr>
-                    <th>Ticket</th>
-                    <th>Time Spent</th>
-                    <th colspan="2">Comment</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var jiraWorklogEntry in _jiraWorklogEntries)
-                {
-                    <tr>
-                        <td>
-                            <InputText @bind-Value="jiraWorklogEntry.Ticket" placeholder="CTS-302" />
-                        </td>
-                        <td>
-                            <InputText @bind-Value="jiraWorklogEntry.TimeSpent" placeholder="1d 2h 3m" />
-                        </td>
-                        <td>
-                            <InputTextArea @bind-Value="jiraWorklogEntry.Comment" placeholder="Fixed things" spellcheck="true" />
-                        </td>
-                        <td>
-                            <button type="button"
-                                    class="btn btn-danger"
-                                    @onclick="@(e => DeleteEntry(jiraWorklogEntry))">
-                                <i class="far fa-times-circle"></i>
-                                Remove
-                            </button>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+        <button type="button" class="btn btn-secondary" @onclick="AddNewTimeEntry">
+            <i class="oi oi-plus"></i>
+            &nbsp;Add New Worklog Entry
+        </button>
+        <button type="submit" class="btn btn-primary">
+            <i class="oi oi-cloud-upload"></i>
+            &nbsp;Submit to Jira
+        </button>
+        <div class="row">
+            <div class="col col-12">
+                <table id="worklongEntryTable" class="table table-sm table-responsive-sm table-responsive-md table-hover table-striped w-auto">
+                    <thead>
+                        <tr>
+                            <th id="worklongEntryTableTicketColumn">Ticket</th>
+                            <th id="worklongEntryTableTicketColumn">Summary</th>
+                            <th id="worklongEntryTableTimeSpentColumn">Time Spent</th>
+                            <th id="worklongEntryTableCommentColumn">Comment</th>
+                            <th id="worklongEntryTableRemoveColumn"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var jiraWorklogEntry in _jiraWorklogEntries)
+                        {
+                        <tr>
+                            <td>
+                                <InputText @bind-Value="jiraWorklogEntry.Ticket" placeholder="CTS-302" />
+                            </td>
+                            <td>
+                                <InputText @bind-Value="jiraWorklogEntry.Summary" readonly placeholder="Summary" tabindex="-1" />
+                            </td>
+                            <td>
+                                <InputText @bind-Value="jiraWorklogEntry.TimeSpent" placeholder="1d 2h 3m" />
+                            </td>
+                            <td style="display:flex; align-items: stretch; flex: 0 0 50%;">
+                                <InputTextArea @bind-Value="jiraWorklogEntry.Comment" placeholder="Fixed things" spellcheck="true" />
+                            </td>
+                            <td>
+                                <button type="button"
+                                        class="btn btn-danger"
+                                        @onclick="@(e => DeleteEntry(jiraWorklogEntry))">
+                                    <i class="oi oi-circle-x"></i>
+                                    &nbsp;Remove
+                                </button>
+                            </td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </EditForm>
 
     @if (_jiraWorklogEntries.Any(jiraWorkLogEntry => !string.IsNullOrEmpty(jiraWorkLogEntry.Ticket)))
@@ -83,6 +99,12 @@ else
             </li>
         </ul>
     }
+
+    <button type="button"
+        class="btn btn-secondary"
+        @onclick="@(async e => await GetWorklogsAsync())">
+         <i class="oi oi-cloud-download"></i> Get worklogs
+    </button>
 }
 
 @code {
@@ -111,10 +133,15 @@ else
         _jiraWorklogEntries.Remove(jiraWorklogEntry);
     }
 
-    //TODO: Figure out how to call this as the tickets are entered
     private async Task GetJiraTicketSummaryAsync(JiraWorklogEntry jiraWorklogEntry)
     {
         var result = await TimeEntryService.GetJiraTicketSummaryAsync(jiraWorklogEntry.Ticket);
         jiraWorklogEntry.Summary = result;
+    }
+
+    private async Task<List<string>> GetWorklogsAsync()
+    {
+        var result = await TimeEntryService.GetCurrentWeekTicketKeys();
+        return result;
     }
 }

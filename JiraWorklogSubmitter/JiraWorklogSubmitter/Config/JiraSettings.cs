@@ -1,4 +1,4 @@
-﻿namespace JiraWorklogSubmitter.Data
+﻿namespace JiraWorklogSubmitter.Config
 {
     /// <summary>
     /// Used to store the appsettings values
@@ -9,6 +9,8 @@
         private string _email;
         private string _token;
         private string _apiUrl;
+        private string _firstName;
+        private string _lastName;
 
         /// <summary>
         /// The base url of the companies atlassian account.
@@ -37,6 +39,31 @@
             get => _email;
             set => _email = value?.Trim();
         }
+
+        /// <summary>
+        /// Your first name.
+        /// Used for JQL queries.
+        /// </summary>
+        public string FirstName
+        {
+            get => _firstName;
+            set => _firstName = value?.Trim();
+        }
+
+        /// <summary>
+        /// Your last name.
+        /// Used for JQL queries.
+        /// </summary>
+        public string LastName
+        {
+            get => _lastName;
+            set => _lastName = value?.Trim();
+        }
+
+        /// <summary>
+        /// Combination of <see cref="FirstName"/> and <see cref="LastName"/>
+        /// </summary>
+        public string FullName => $"{_firstName} {_lastName}";
 
         /// <summary>
         /// The API token to use

@@ -19,5 +19,11 @@ namespace JiraWorklogSubmitter.Services.Interfaces
         /// <param name="issueKey">The ticket number you want the summary of, ex: CTS-302</param>
         /// <returns>The ticket's summary</returns>
         Task<string> GetJiraTicketSummaryAsync(string issueKey);
+
+        /// <summary>
+        /// Get the keys of tickets worked on for this week
+        /// </summary>
+        /// <returns>A list of ticket keys worked on this week</returns>
+        Task<List<string>> GetCurrentWeekTicketKeys();
     }
 }
