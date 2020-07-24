@@ -100,12 +100,6 @@ else
             </li>
         </ul>
     }
-
-    <button type="button"
-        class="btn btn-secondary"
-        @onclick="@(async e => await GetWorklogsAsync())">
-         <i class="oi oi-cloud-download"></i> Get worklogs
-    </button>
 }
 
 @code {
@@ -138,11 +132,5 @@ else
     {
         var result = await TimeEntryService.GetJiraTicketSummaryAsync(jiraWorklogEntry.Ticket);
         jiraWorklogEntry.Summary = result;
-    }
-
-    private async Task<List<string>> GetWorklogsAsync()
-    {
-        var result = await TimeEntryService.GetCurrentWeekTicketKeys();
-        return result;
     }
 }
