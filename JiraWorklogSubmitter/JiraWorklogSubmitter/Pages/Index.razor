@@ -45,7 +45,7 @@ else
                         {
                         <tr>
                             <td>
-                                <InputText @bind-Value="jiraWorklogEntry.Ticket" placeholder="CTS-302" />
+                                <input value="@jiraWorklogEntry.Ticket" placeholder="CTS-302" @onchange="@(async e => { jiraWorklogEntry.Ticket = e.Value.ToString(); await GetJiraTicketSummaryAsync(jiraWorklogEntry); })" />
                             </td>
                             <td>
                                 <InputText @bind-Value="jiraWorklogEntry.Summary" readonly placeholder="Summary" tabindex="-1" />
