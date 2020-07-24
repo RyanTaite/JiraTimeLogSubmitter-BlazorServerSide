@@ -48,7 +48,7 @@ else
                                 <input value="@jiraWorklogEntry.Ticket" placeholder="CTS-302" @onchange="@(async e => { jiraWorklogEntry.Ticket = e.Value.ToString(); await GetJiraTicketSummaryAsync(jiraWorklogEntry); })" />
                             </td>
                             <td>
-                                <InputText @bind-Value="jiraWorklogEntry.Summary" readonly placeholder="Summary" tabindex="-1" />
+                                <InputText @bind-Value="jiraWorklogEntry.Summary" readonly disabled placeholder="Summary" tabindex="-1" />
                             </td>
                             <td>
                                 <InputText @bind-Value="jiraWorklogEntry.TimeSpent" placeholder="1d 2h 3m" />
@@ -59,6 +59,7 @@ else
                             <td>
                                 <button type="button"
                                         class="btn btn-danger"
+                                        tabindex="-1"
                                         @onclick="@(e => DeleteEntry(jiraWorklogEntry))">
                                     <i class="oi oi-circle-x"></i>
                                     &nbsp;Remove
