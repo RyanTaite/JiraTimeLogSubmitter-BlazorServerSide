@@ -98,7 +98,7 @@ namespace JiraWorklogSubmitter.Services
                 // https://colyar.atlassian.net/rest/api/latest/search?jql=worklogDate >= startOfWeek() and worklogAuthor = "Ryan Taite"&fields=key
 
                 var httpClientFactory = _httpClientFactory.CreateClient(HttpClientFactoryNameEmum.Jira.ToString());
-                var url = $"{_jiraSettings.Value.ApiUrl}search?jql=worklogDate >= startOfWeek() and worklogAuthor = \"{_jiraSettings.Value.FullName}\"&fields=key";
+                var url = $"{_jiraSettings.Value.ApiUrl}search?jql=worklogDate >= startOfWeek() and worklogAuthor = \"{_jiraSettings.Value.FullName}\"&fields=summary"; // Returns both the key and summary
 
                 var request = new HttpRequestMessage(HttpMethod.Get, url);
 
@@ -122,6 +122,32 @@ namespace JiraWorklogSubmitter.Services
 
                 //TOOD: Return something
                 return allKeys;
+
+                /*  Now that I have a list of keys that were worked on for a certain period of time, I should use those keys to look up the issues themselves.
+                    How do I filter the worklogs retrived to that of the time period I requested?
+                    Do I have to grab all of them from JIRA and filter them here?
+                    This link ran into the same scenario, and started off with the same idea: https://community.atlassian.com/t5/Jira-questions/How-to-get-list-of-worklogs-through-JIRA-REST-API/qaq-p/533633
+                        Use GET /rest/api/3/worklog/updated to get the IDs of worklogs in the time period. The timestamp refers to the time the worklog has been created/updated, 
+                            not the date to which the entry refers. To make sure I have everything, I just go later in the past. The call is paginated, and the response is small, so listing too much is not a big problem. 
+                            You just need to remove the worklogs you don't want afterwards
+                            Those values look like: 
+                            {
+                                "worklogId": 10005,
+                                "updatedTime": 1550079715574, // The timestamp refers to the time the worklog has been created/updated, not the date to which the entry refers
+                                "properties": []
+                            },
+                            which isn't all that helpful.
+                        Use POST /rest/api/3/worklog/list to get the actual worklogs. The payload is the list of IDs to you got in the first step. This is limited to 1000 entries, but you can call it multiple times
+                            JSON Payload example: 
+                            {
+                                "ids": [
+                                    10005
+                                ]
+                            }
+                        Bonus - If you need the issues for the retrieved worklogs, use POST /rest/api/3/search. You need to use POST, because the query will be very long and does not fit in the URL. 
+                            You can build the query from the issue ids in the worklogs retrieved in step 2 (`id in (12345, 456789, ...)`
+
+                */
             }
             catch (System.Exception exception)
             {
