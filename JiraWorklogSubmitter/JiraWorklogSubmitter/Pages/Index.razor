@@ -46,13 +46,21 @@ else
                     {
                         <tr>
                             <td>
-                                <input value="@jiraWorklogEntry.Ticket" placeholder="CTS-302" @onchange="@(async e => { jiraWorklogEntry.Ticket = e.Value.ToString(); await GetJiraTicketSummaryAsync(jiraWorklogEntry); })" />
+                                <input value="@jiraWorklogEntry.Ticket" placeholder="CTS-302" @onchange="@(async e =>
+                                                                                                           {
+                                                                                                               jiraWorklogEntry.Ticket = e.Value.ToString();
+                                                                                                               await GetJiraTicketSummaryAsync(jiraWorklogEntry);
+                                                                                                           })" />
                             </td>
                             <td>
                                 <InputText @bind-Value="jiraWorklogEntry.Summary" readonly disabled placeholder="Summary" tabindex="-1" />
                             </td>
                             <td>
-                                <input value="@jiraWorklogEntry.TimeSpent" placeholder="1d 2h 3m" @onchange="@(e => { jiraWorklogEntry.TimeSpent = e.Value.ToString(); UpdateTotalTime(); })" />
+                                <input value="@jiraWorklogEntry.TimeSpent" placeholder="1d 2h 3m" @onchange="@(e =>
+                                                                                                               {
+                                                                                                                   jiraWorklogEntry.TimeSpent = e.Value.ToString();
+                                                                                                                   UpdateTotalTime();
+                                                                                                               })" />
                             </td>
                             <td style="display:flex; align-items: stretch; flex: 0 0 50%;">
                                 <InputTextArea @bind-Value="jiraWorklogEntry.Comment" placeholder="Fixed things" spellcheck="true" />
@@ -61,7 +69,11 @@ else
                                 <button type="button"
                                         class="btn btn-danger"
                                         tabindex="-1"
-                                        @onclick="@(e => DeleteEntry(jiraWorklogEntry))">
+                                        @onclick="@(e =>
+                                                    {
+                                                        DeleteEntry(jiraWorklogEntry);
+                                                        UpdateTotalTime();
+                                                    })">
                                     <i class="oi oi-circle-x"></i>
                                     &nbsp;Remove
                                 </button>
@@ -73,7 +85,9 @@ else
                         <tr>
                             <td></td>
                             <td></td>
-                            <td></td>
+                            <td>
+                                <InputText @bind-Value="_totalTimeSpent" readonly disabled tabindex="-1" />
+                            </td>
                             <td></td>
                             <td></td>
                         </tr>
@@ -114,7 +128,7 @@ else
 
 @code {
     private readonly ICollection<JiraWorklogEntry> _jiraWorklogEntries = new List<JiraWorklogEntry>() { new JiraWorklogEntry() };
-    private TimeSpan _totalTimeSpan = new TimeSpan();
+    private string _totalTimeSpent = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -158,7 +172,7 @@ else
         var regex = new Regex(patternCombined);
 
         var allTimeStrings = _jiraWorklogEntries.Select(worklogEntry => worklogEntry.TimeSpent).ToList();
-        _totalTimeSpan = new TimeSpan(); // Clear the current value since we are going to build a new one
+        var totalTimeSpan = new TimeSpan(); // Clear the current value since we are going to build a new one
 
         foreach (var timeString in allTimeStrings)
         {
@@ -169,12 +183,14 @@ else
                 int.TryParse(match.Groups["hour"].Value, out var hour);
                 int.TryParse(match.Groups["minute"].Value, out var minute);
                 var newTimeSpan = new TimeSpan(day, hour, minute);
-                _totalTimeSpan = _totalTimeSpan.Add(newTimeSpan);
+                totalTimeSpan = totalTimeSpan.Add(newTimeSpan);
             }
             else
             {
                 Console.WriteLine($"No match on {timeString}");
             }
         }
+
+        _totalTimeSpent = totalTimeSpan.ToString();
     }
 }
