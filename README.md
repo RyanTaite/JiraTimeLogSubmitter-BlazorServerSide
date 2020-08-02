@@ -1,4 +1,6 @@
 # Jira Time Log Submitter - Blazor Server Side
+![Build](https://github.com/RyanTaite/JiraTimeLogSubmitter-BlazorServerSide/workflows/Build/badge.svg?branch=master)
+
 Blazor Server-Side Project to submit time logs to Jira. Would be better as a Blazor Client Side PWA app, but debugging is currently broken (despite what the docs say).
 
 *A lot of this is a work in progress, feel free to edit as you see fit*
