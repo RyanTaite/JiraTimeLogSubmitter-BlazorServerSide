@@ -80,11 +80,10 @@ namespace JiraWorklogSubmitter.Services
             var responseBody = await httpResponse.EnsureSuccessStatusCode().Content.ReadAsStringAsync();
 
             var jiraResponseObject = JsonSerializer.Deserialize<JiraResponseObject>(responseBody, DefaultJsonSerializerOptions);
-            jiraResponseObject.Fields.TryGetValue("summary", out var summary);
 
             _logger.LogDebug($"responseBody: {responseBody}");
 
-            return summary;
+            return jiraResponseObject.Fields.Summary;
         }
 
         /// <inheritdoc/>
@@ -98,7 +97,8 @@ namespace JiraWorklogSubmitter.Services
                 // https://colyar.atlassian.net/rest/api/latest/search?jql=worklogDate >= startOfWeek() and worklogAuthor = "Ryan Taite"&fields=key
 
                 var httpClientFactory = _httpClientFactory.CreateClient(HttpClientFactoryNameEmum.Jira.ToString());
-                var url = $"{_jiraSettings.Value.ApiUrl}search?jql=worklogDate >= startOfWeek() and worklogAuthor = \"{_jiraSettings.Value.FullName}\"&fields=summary"; // Returns both the key and summary
+                var dateTime = new DateTime(2020, 7, 31);
+                var url = $"{_jiraSettings.Value.ApiUrl}search?jql=worklogDate = \"{dateTime:yyyy-MM-dd}\" and worklogAuthor = \"{_jiraSettings.Value.FullName}\"&fields=summary"; // Returns both the key and summary
 
                 var request = new HttpRequestMessage(HttpMethod.Get, url);
 
@@ -113,8 +113,7 @@ namespace JiraWorklogSubmitter.Services
                 var allKeys = jiraResponseObject.Issues
                     .Select(issue =>
                     {
-                        issue.TryGetValue("key", out var key);
-                        return key;
+                        return issue.Key;
                     })
                     .ToList();
 
