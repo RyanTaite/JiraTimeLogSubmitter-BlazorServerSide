@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace JiraWorklogSubmitter.Data
 {
@@ -34,14 +34,14 @@ namespace JiraWorklogSubmitter.Data
         /// Expected format is some form of "#d #h #m"
         /// </summary>
         [Required]
-        [JsonPropertyName("timeSpent")]
+        [JsonProperty("timeSpent")]
         [DisplayName("Time Spent")]
         public string TimeSpent { get => _timeSpent; set => _timeSpent = value?.Trim(); }
 
         /// <summary>
         /// Any comments you want to attach to the worklog entry. Does not have any formatting support (I think)
         /// </summary>
-        [JsonPropertyName("comment")]
+        [JsonProperty("comment")]
         public string Comment { get => _comment; set => _comment = value?.Trim(); }
 
         [JsonIgnore]    // The JIRA API does not want this
