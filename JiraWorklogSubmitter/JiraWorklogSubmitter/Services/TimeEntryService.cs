@@ -83,7 +83,7 @@ namespace JiraWorklogSubmitter.Services
         }
 
         /// <inheritdoc/>
-        public async Task<List<IssuesWithComments>> GetCurrentWeekTicketKeys()
+        public async Task<List<IssuesWithComments>> GetWorklogsForTargetDate(DateTime targetDate)
         {
             try
             {
@@ -93,7 +93,6 @@ namespace JiraWorklogSubmitter.Services
                 // https://colyar.atlassian.net/rest/api/latest/search?jql=worklogDate >= startOfWeek() and worklogAuthor = "Ryan Taite"&fields=key
 
                 var jiraClient = _httpClientFactory.CreateClient(HttpClientFactoryNameEmum.Jira.ToString());
-                var targetDate = new DateTime(2020, 7, 31);
                 // Using Jira's JQL we can get the tickets that were worked on by the signed in user, but not the actual worklogs themselves.
                 var url = $"{_jiraSettings.Value.ApiUrl}search?jql=worklogDate = \"{targetDate:yyyy-MM-dd}\" and worklogAuthor = \"{_jiraSettings.Value.FullName}\"&fields=summary"; // Filter down the just the summary (ticket title), so we don't get too much info back.
 
@@ -125,7 +124,7 @@ namespace JiraWorklogSubmitter.Services
             catch (System.Exception exception)
             {
                 var innerExceptionMessage = exception.InnerException == null ? "" : exception.InnerException.Message;
-                _logger.LogError(exception, $"Something went wrong in {nameof(GetCurrentWeekTicketKeys)}!{Environment.NewLine}Error: {exception.Message}{Environment.NewLine}Inner Exception: {innerExceptionMessage}");
+                _logger.LogError(exception, $"Something went wrong in {nameof(GetWorklogsForTargetDate)}!{Environment.NewLine}Error: {exception.Message}{Environment.NewLine}Inner Exception: {innerExceptionMessage}");
                 throw;
             }
 

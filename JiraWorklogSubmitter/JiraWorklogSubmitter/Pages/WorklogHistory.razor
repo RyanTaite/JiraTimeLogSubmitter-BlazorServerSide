@@ -9,43 +9,51 @@
 @inject IOptions<JiraSettings> JiraSettings
 
 <h3>Worklog History</h3>
+<h4>Change the date to retrieve your worklogs for that day</h4>
 
-<button type="button"
-        class="btn btn-secondary"
-        @onclick="@(async e => await GetWorklogsAsync())">
-    <i class="oi oi-cloud-download"></i> Get worklogs
-</button>
+<EditForm Model="_issuesWithComments">
+    <input value="@TargetDate" type="date" @onchange="@(async e =>
+                                                {
+                                                    TargetDate = DateTime.Parse(e.Value.ToString()); //TODO: This isn't setting TargetDate correctly
+                                                    await GetWorklogsAsync();
+                                                })" />
+</EditForm>
 
 @if (_issuesWithComments.Any())
 {
     <ul>
-        Yesterday: @*TODO: Show the target date day instead *@
-        @foreach (var issueWithComment in _issuesWithComments)
-        {
-            <li>
-                <a href=@($"{JiraSettings.Value.BaseUrl}/browse/{issueWithComment.Key}")>
-                    @(issueWithComment.Key): @(issueWithComment.Summary)
-                </a>
-                @foreach (var comment in issueWithComment.Comments.Where(c => !string.IsNullOrEmpty(c)))
+        <li>
+            @TargetDate.Date.DayOfWeek:
+            <ul>
+                @foreach (var issueWithComment in _issuesWithComments)
                 {
-                    <ul>
-                        <li>
-                            @comment
-                        </li>
-                    </ul>
+                    <li>
+                        <a href=@($"{JiraSettings.Value.BaseUrl}/browse/{issueWithComment.Key}")>
+                            @(issueWithComment.Key): @(issueWithComment.Summary)
+                        </a>
+                        @foreach (var comment in issueWithComment.Comments.Where(c => !string.IsNullOrEmpty(c)))
+                        {
+                            <ul>
+                                <li>
+                                    @comment
+                                </li>
+                            </ul>
+                        }
+                    </li>
                 }
-            </li>
-        }
+            </ul>
+        </li>
     </ul>
 }
 
 @code {
     private ICollection<IssuesWithComments> _issuesWithComments = new List<IssuesWithComments>();
+    private DateTime TargetDate { get; set; } 
 
     private async Task GetWorklogsAsync()
     {
         _issuesWithComments.Add(new IssuesWithComments { Key = "Please wait", Summary = "Getting your worklogs..." });
-        var result = await TimeEntryService.GetCurrentWeekTicketKeys();
+        var result = await TimeEntryService.GetWorklogsForTargetDate(TargetDate);
         _issuesWithComments.Clear();
         _issuesWithComments = result;
     }
