@@ -8,6 +8,6 @@ namespace JiraWorklogSubmitter.Data.ResponseObjects
     /// </summary>
     public class SearchResponseObject : CommonJsonFields
     {
-        public List<Issue> Issues { get; set; }
+        public List<Issue> Issues { get; set; } = new List<Issue>();
     }
 }

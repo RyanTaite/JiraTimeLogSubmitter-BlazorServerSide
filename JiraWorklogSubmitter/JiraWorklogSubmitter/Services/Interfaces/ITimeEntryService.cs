@@ -24,6 +24,6 @@ namespace JiraWorklogSubmitter.Services.Interfaces
         /// Get the keys of tickets worked on for this week
         /// </summary>
         /// <returns>A list of ticket keys worked on this week</returns>
-        Task<List<string>> GetCurrentWeekTicketKeys();
+        Task<List<IssuesWithComments>> GetCurrentWeekTicketKeys();
     }
 }

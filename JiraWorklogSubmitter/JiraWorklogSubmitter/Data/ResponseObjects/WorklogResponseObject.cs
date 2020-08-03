@@ -8,6 +8,6 @@ namespace JiraWorklogSubmitter.Data.ResponseObjects
     /// </summary>
     public class WorklogResponseObject : CommonJsonFields
     {
-        public List<Worklog> Worklogs { get; set; }
+        public List<Worklog> Worklogs { get; set; } = new List<Worklog>();
     }
 }

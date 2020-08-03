@@ -9,7 +9,7 @@ namespace JiraWorklogSubmitter.Data
 
         public string Summary { get; set; }
 
-        public List<string> Comments { get; set; }
+        public List<string> Comments { get; set; } = new List<string>();
 
         public IssuesWithComments()
         {

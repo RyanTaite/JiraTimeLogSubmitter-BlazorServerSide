@@ -1,8 +1,12 @@
 ﻿@page "/worklogHistory"
 
+@using JiraWorklogSubmitter.Config
 @using JiraWorklogSubmitter.Services.Interfaces
+@using JiraWorklogSubmitter.Data
+@using Microsoft.Extensions.Options
 
 @inject ITimeEntryService TimeEntryService
+@inject IOptions<JiraSettings> JiraSettings
 
 <h3>Worklog History</h3>
 
@@ -12,24 +16,37 @@
     <i class="oi oi-cloud-download"></i> Get worklogs
 </button>
 
-@if (_worklogKeys.Any())
+@if (_issuesWithComments.Any())
 {
-<ul>
-    @foreach(var worklogKey in _worklogKeys)
-    {
-        <li>@worklogKey</li>
-    }
-</ul>
+    <ul>
+        Yesterday: @*TODO: Show the target date day instead *@
+        @foreach (var issueWithComment in _issuesWithComments)
+        {
+            <li>
+                <a href=@($"{JiraSettings.Value.BaseUrl}/browse/{issueWithComment.Key}")>
+                    @(issueWithComment.Key): @(issueWithComment.Summary)
+                </a>
+                @foreach (var comment in issueWithComment.Comments.Where(c => !string.IsNullOrEmpty(c)))
+                {
+                    <ul>
+                        <li>
+                            @comment
+                        </li>
+                    </ul>
+                }
+            </li>
+        }
+    </ul>
 }
 
 @code {
-    private ICollection<string> _worklogKeys = new List<string>();
+    private ICollection<IssuesWithComments> _issuesWithComments = new List<IssuesWithComments>();
 
     private async Task GetWorklogsAsync()
     {
-        _worklogKeys.Add("Loading...");
+        _issuesWithComments.Add(new IssuesWithComments { Key = "Please wait", Summary = "Getting your worklogs..." });
         var result = await TimeEntryService.GetCurrentWeekTicketKeys();
-        _worklogKeys.Clear();
-        _worklogKeys = result;
+        _issuesWithComments.Clear();
+        _issuesWithComments = result;
     }
 }

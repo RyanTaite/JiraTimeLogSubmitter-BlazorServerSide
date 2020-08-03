@@ -83,7 +83,7 @@ namespace JiraWorklogSubmitter.Services
         }
 
         /// <inheritdoc/>
-        public async Task<List<string>> GetCurrentWeekTicketKeys()
+        public async Task<List<IssuesWithComments>> GetCurrentWeekTicketKeys()
         {
             try
             {
@@ -120,8 +120,7 @@ namespace JiraWorklogSubmitter.Services
                 var worklogAndComments = GetWorklogSummariesAndComments(allMatchingWorklogs);
                 await LinkWorklogsToSummariesAsync(worklogAndComments);
 
-                //TOOD: Return something
-                return allKeys;
+                return worklogAndComments;
             }
             catch (System.Exception exception)
             {
