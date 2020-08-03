@@ -40,7 +40,8 @@ namespace JiraWorklogSubmitter
             // This enables us to inject JiraSettings into razor pages
             services.Configure<JiraSettings>(Configuration.GetSection(nameof(JiraSettings)));
 
-            services.AddRazorPages();
+            // Newtonsoft has better DateTime handeling, which we need becuase Jira's response is in a format System.Text.Json doesn't support
+            services.AddRazorPages().AddNewtonsoftJson();
             services.AddServerSideBlazor();
 
             AddTransients(services);

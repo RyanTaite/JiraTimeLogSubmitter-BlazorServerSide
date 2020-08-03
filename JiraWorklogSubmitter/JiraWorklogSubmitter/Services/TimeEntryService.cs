@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using JiraWorklogSubmitter.Data;
 using JiraWorklogSubmitter.Services.Interfaces;
 using JiraWorklogSubmitter.Config;
 using System;
+using JiraWorklogSubmitter.Data.ResponseObjects;
+using Newtonsoft.Json;
 
 namespace JiraWorklogSubmitter.Services
 {
@@ -21,11 +22,6 @@ namespace JiraWorklogSubmitter.Services
 
         private const string ApplicationJson = "application/json";
 
-        public static JsonSerializerOptions DefaultJsonSerializerOptions => new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        };
-
         public TimeEntryService(ILogger<TimeEntryService> logger, IHttpClientFactory httpClientFactory, IOptions<JiraSettings> jiraSettings)
         {
             _logger = logger;
@@ -36,7 +32,7 @@ namespace JiraWorklogSubmitter.Services
         /// <inheritdoc/>
         public async Task<string> SubmitTimeLogAsync(ICollection<JiraWorklogEntry> jiraWorkLogEntries)
         {
-            var httpClientFactory = _httpClientFactory.CreateClient(HttpClientFactoryNameEmum.Jira.ToString());
+            var jiraClient = _httpClientFactory.CreateClient(HttpClientFactoryNameEmum.Jira.ToString());
 
             foreach (var jiraWorklogEntry in jiraWorkLogEntries.Where(j => !string.IsNullOrEmpty(j.Ticket) && !string.IsNullOrEmpty(j.TimeSpent)))
             {
@@ -44,7 +40,7 @@ namespace JiraWorklogSubmitter.Services
 
                 var request = new HttpRequestMessage(HttpMethod.Post, worklogUrl);
 
-                var jsonBody = JsonSerializer.Serialize(jiraWorklogEntry);
+                var jsonBody = JsonConvert.SerializeObject(jiraWorklogEntry);
 
                 var jiraWorkLogEntryHttpRequestContent = new StringContent(
                         jsonBody,
@@ -55,7 +51,7 @@ namespace JiraWorklogSubmitter.Services
                 request.Content = jiraWorkLogEntryHttpRequestContent;
 
                 _logger.LogDebug($"Attempting to submit: {jsonBody} to the url: {worklogUrl}");
-                using var httpResponse = await httpClientFactory.SendAsync(request);
+                using var httpResponse = await jiraClient.SendAsync(request);
 
                 //TODO: Need to handle a scenario where one of the submit fails in the middle
                 var responseBody = httpResponse.EnsureSuccessStatusCode();
@@ -68,27 +64,26 @@ namespace JiraWorklogSubmitter.Services
         /// <inheritdoc/>
         public async Task<string> GetJiraTicketSummaryAsync(string issueKey)
         {
-            var httpClientFactory = _httpClientFactory.CreateClient(HttpClientFactoryNameEmum.Jira.ToString());
+            var jiraClient = _httpClientFactory.CreateClient(HttpClientFactoryNameEmum.Jira.ToString());
             var summaryUrl = $"{_jiraSettings.Value.ApiUrl}issue/{issueKey}?fields=summary";
 
             var request = new HttpRequestMessage(HttpMethod.Get, summaryUrl);
 
             _logger.LogDebug($"Attempt to get ticket summary for {issueKey} from the url: {summaryUrl}");
 
-            using var httpResponse = await httpClientFactory.SendAsync(request);
+            using var httpResponse = await jiraClient.SendAsync(request);
 
             var responseBody = await httpResponse.EnsureSuccessStatusCode().Content.ReadAsStringAsync();
 
-            var jiraResponseObject = JsonSerializer.Deserialize<JiraResponseObject>(responseBody, DefaultJsonSerializerOptions);
-            jiraResponseObject.Fields.TryGetValue("summary", out var summary);
+            var issueResponseObject = JsonConvert.DeserializeObject<IssueResponseObject>(responseBody);
 
             _logger.LogDebug($"responseBody: {responseBody}");
 
-            return summary;
+            return issueResponseObject.Fields.Summary;
         }
 
         /// <inheritdoc/>
-        public async Task<List<string>> GetCurrentWeekTicketKeys()
+        public async Task<List<IssuesWithComments>> GetWorklogsForTargetDate(DateTime targetDate)
         {
             try
             {
@@ -97,39 +92,102 @@ namespace JiraWorklogSubmitter.Services
                 // This query gets a list of the tickets that an author submitted worklogs too, not the actual work logs
                 // https://colyar.atlassian.net/rest/api/latest/search?jql=worklogDate >= startOfWeek() and worklogAuthor = "Ryan Taite"&fields=key
 
-                var httpClientFactory = _httpClientFactory.CreateClient(HttpClientFactoryNameEmum.Jira.ToString());
-                var url = $"{_jiraSettings.Value.ApiUrl}search?jql=worklogDate >= startOfWeek() and worklogAuthor = \"{_jiraSettings.Value.FullName}\"&fields=key";
+                var jiraClient = _httpClientFactory.CreateClient(HttpClientFactoryNameEmum.Jira.ToString());
+                // Using Jira's JQL we can get the tickets that were worked on by the signed in user, but not the actual worklogs themselves.
+                var url = $"{_jiraSettings.Value.ApiUrl}search?jql=worklogDate = \"{targetDate:yyyy-MM-dd}\" and worklogAuthor = \"{_jiraSettings.Value.FullName}\"&fields=summary"; // Filter down the just the summary (ticket title), so we don't get too much info back.
 
                 var request = new HttpRequestMessage(HttpMethod.Get, url);
 
                 _logger.LogDebug($"Attempt to get list of worked on tickets from the url: {url}");
 
-                using var httpResponse = await httpClientFactory.SendAsync(request);
+                using var httpResponse = await jiraClient.SendAsync(request);
 
                 var responseBody = await httpResponse.EnsureSuccessStatusCode().Content.ReadAsStringAsync();
 
-                var jiraResponseObject = JsonSerializer.Deserialize<JiraResponseObject>(responseBody, DefaultJsonSerializerOptions);
+                var searchResponseObject = JsonConvert.DeserializeObject<SearchResponseObject>(responseBody);
 
-                var allKeys = jiraResponseObject.Issues
+                var allKeys = searchResponseObject.Issues
                     .Select(issue =>
                     {
-                        issue.TryGetValue("key", out var key);
-                        return key;
+                        return issue.Key;
                     })
                     .ToList();
 
                 _logger.LogDebug($"responseBody: {responseBody}");
 
-                //TOOD: Return something
-                return allKeys;
+                var allMatchingWorklogs = await GetWorklogsForDayAndKeysAsync(allKeys, targetDate);
+                var worklogAndComments = GetWorklogSummariesAndComments(allMatchingWorklogs);
+                await LinkWorklogsToSummariesAsync(worklogAndComments);
+
+                return worklogAndComments;
             }
             catch (System.Exception exception)
             {
                 var innerExceptionMessage = exception.InnerException == null ? "" : exception.InnerException.Message;
-                _logger.LogError(exception, $"Something went wrong in {nameof(GetCurrentWeekTicketKeys)}!{Environment.NewLine}Error: {exception.Message}{Environment.NewLine}Inner Exception: {innerExceptionMessage}");
+                _logger.LogError(exception, $"Something went wrong in {nameof(GetWorklogsForTargetDate)}!{Environment.NewLine}Error: {exception.Message}{Environment.NewLine}Inner Exception: {innerExceptionMessage}");
                 throw;
             }
-            
+
+        }
+
+        /// <summary>
+        /// Because worklogs don't get returned with their summaries, we have to get them here and link them up
+        /// </summary>
+        /// <param name="worklogAndComments"></param>
+        private async Task LinkWorklogsToSummariesAsync(List<IssuesWithComments> worklogAndComments)
+        {
+            foreach (var worklog in worklogAndComments)
+            {
+                worklog.Summary = await GetJiraTicketSummaryAsync(worklog.Key);
+            }
+        }
+
+        /// <summary>
+        /// Group the matching worklogs by their key, to get a list of keys and their associated comments
+        /// </summary>
+        /// <param name="allMatchingWorklogs"></param>
+        /// <returns></returns>
+        private List<IssuesWithComments> GetWorklogSummariesAndComments(List<Worklog> allMatchingWorklogs)
+        {
+            var result = allMatchingWorklogs
+                .GroupBy(worklog => worklog.Key, worklog => worklog.Comment, (key, group) =>
+                    new IssuesWithComments { Key = key, Comments = group.ToList() })
+                .ToList();
+
+            return result;
+        }
+
+        /// <summary>
+        /// Given a list of worklog keys, get each of their worklogs, then filter them down to the <paramref name="targetDate"/> and where the Author matches the current users full name
+        /// </summary>
+        /// <param name="allKeys">The issue keys we want the worklogs for</param>
+        /// <param name="targetDate">The day a worklog is entered that we want to retrieve</param>
+        /// <returns>A list of matching <see cref="Worklog"/>s</returns>
+        private async Task<List<Worklog>> GetWorklogsForDayAndKeysAsync(List<string> allKeys, DateTime targetDate)
+        {
+            var jiraClient = _httpClientFactory.CreateClient(HttpClientFactoryNameEmum.Jira.ToString());
+
+            var allMatchingWorklogs = new List<Worklog>();
+
+            foreach (var key in allKeys)
+            {
+                var url = $"{_jiraSettings.Value.ApiUrl}issue/{key}/worklog"; // Filter down the just the summary (ticket title), so we don't get too much info back.
+                var request = new HttpRequestMessage(HttpMethod.Get, url);
+                using var httpResponse = await jiraClient.SendAsync(request);
+
+                var responseBody = await httpResponse.EnsureSuccessStatusCode().Content.ReadAsStringAsync();
+
+                var worklogResponseObject = JsonConvert.DeserializeObject<WorklogResponseObject>(responseBody);
+
+                // Get worklogs created by our user and created on our target date
+                foreach (var worklog in worklogResponseObject.Worklogs.Where(worklog => worklog.Author.DisplayName == _jiraSettings.Value.FullName && worklog.Created.Date == targetDate.Date))
+                {
+                    worklog.Key = key; // The key doesn't come back with the response, so we have to do it here
+                    allMatchingWorklogs.Add(worklog);
+                }
+            }
+
+            return allMatchingWorklogs;
         }
     }
 }

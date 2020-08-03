@@ -1,6 +1,6 @@
 ﻿@page "/"
 
-@using JiraWorklogSubmitter.Config 
+@using JiraWorklogSubmitter.Config
 @using JiraWorklogSubmitter.Data
 @using JiraWorklogSubmitter.Services.Interfaces
 @using Microsoft.Extensions.Options
@@ -8,7 +8,7 @@
 @inject ITimeEntryService TimeEntryService
 @inject IOptions<JiraSettings> JiraSettings
 
-<h1>JIRA Time Log</h1>
+<h1>Jira Time Log</h1>
 
 <p>Create Time Entries and then submit them</p>
 
@@ -96,34 +96,6 @@ else
             </div>
         </div>
     </EditForm>
-
-    @if (_jiraWorklogEntries.Any(jiraWorkLogEntry => !string.IsNullOrEmpty(jiraWorkLogEntry.Ticket)))
-    {
-        <ul>
-            <li>
-                Yesterday:
-                <ul>
-                    @foreach (var jiraWorklogEntry in _jiraWorklogEntries.Where(jiraWorkLogEntry => !string.IsNullOrEmpty(jiraWorkLogEntry.Ticket)))
-                    {
-                        <li>
-                            <a href=@($"{JiraSettings.Value.BaseUrl}/browse/{jiraWorklogEntry.Ticket}")>
-                                @(jiraWorklogEntry.Ticket): @(jiraWorklogEntry.Summary)
-                            </a>
-                            @if (!string.IsNullOrEmpty(jiraWorklogEntry.Comment))
-                            {
-                                <ul>
-                                    @* TODO: Foreach copy of this ticket (multiple entries submitted) make a new <li>Comment</li> *@
-                                    <li>
-                                        @jiraWorklogEntry.Comment
-                                    </li>
-                                </ul>
-                            }
-                        </li>
-                    }
-                </ul>
-            </li>
-        </ul>
-    }
 }
 
 @code {

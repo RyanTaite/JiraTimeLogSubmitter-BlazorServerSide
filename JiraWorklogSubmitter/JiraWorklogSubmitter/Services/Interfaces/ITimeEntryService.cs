@@ -21,9 +21,9 @@ namespace JiraWorklogSubmitter.Services.Interfaces
         Task<string> GetJiraTicketSummaryAsync(string issueKey);
 
         /// <summary>
-        /// Get the keys of tickets worked on for this week
+        /// Get the worklog comments for tickets worked on for the <paramref name="TargetDate"/>
         /// </summary>
-        /// <returns>A list of ticket keys worked on this week</returns>
-        Task<List<string>> GetCurrentWeekTicketKeys();
+        /// <returns>A list of <see cref="IssuesWithComments"/> that has the worklog keys, summaries, and comments</returns>
+        Task<List<IssuesWithComments>> GetWorklogsForTargetDate(System.DateTime targetDate);
     }
 }
