@@ -52,9 +52,10 @@
 
     private async Task GetWorklogsAsync()
     {
+        _issuesWithComments.Clear(); // Clear out previous results
         _issuesWithComments.Add(new IssuesWithComments { Key = "Please wait", Summary = "Getting your worklogs..." });
         var result = await TimeEntryService.GetWorklogsForTargetDate(TargetDate);
-        _issuesWithComments.Clear();
+        _issuesWithComments.Clear(); // Clear out the loading text
         _issuesWithComments = result;
     }
 }
