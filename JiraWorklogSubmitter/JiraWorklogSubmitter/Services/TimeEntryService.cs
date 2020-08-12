@@ -64,22 +64,34 @@ namespace JiraWorklogSubmitter.Services
         /// <inheritdoc/>
         public async Task<string> GetJiraTicketSummaryAsync(string issueKey)
         {
-            var jiraClient = _httpClientFactory.CreateClient(HttpClientFactoryNameEmum.Jira.ToString());
-            var summaryUrl = $"{_jiraSettings.Value.ApiUrl}issue/{issueKey}?fields=summary";
+            try
+            {
+                var jiraClient = _httpClientFactory.CreateClient(HttpClientFactoryNameEmum.Jira.ToString());
+                var summaryUrl = $"{_jiraSettings.Value.ApiUrl}issue/{issueKey}?fields=summary";
 
-            var request = new HttpRequestMessage(HttpMethod.Get, summaryUrl);
+                var request = new HttpRequestMessage(HttpMethod.Get, summaryUrl);
 
-            _logger.LogDebug($"Attempt to get ticket summary for {issueKey} from the url: {summaryUrl}");
+                _logger.LogDebug($"Attempt to get ticket summary for {issueKey} from the url: {summaryUrl}");
 
-            using var httpResponse = await jiraClient.SendAsync(request);
+                using var httpResponse = await jiraClient.SendAsync(request);
 
-            var responseBody = await httpResponse.EnsureSuccessStatusCode().Content.ReadAsStringAsync();
+                var responseBody = await httpResponse.EnsureSuccessStatusCode().Content.ReadAsStringAsync();
 
-            var issueResponseObject = JsonConvert.DeserializeObject<IssueResponseObject>(responseBody);
+                var issueResponseObject = JsonConvert.DeserializeObject<IssueResponseObject>(responseBody);
 
-            _logger.LogDebug($"responseBody: {responseBody}");
+                _logger.LogDebug($"responseBody: {responseBody}");
 
-            return issueResponseObject.Fields.Summary;
+                return issueResponseObject.Fields.Summary;
+            }
+            catch (HttpRequestException)
+            {
+                return "ERROR: UNABLE TO GET SUMMARY FOR THAT ISSUE!";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"An error occured in {nameof(GetJiraTicketSummaryAsync)} when trying to get the summary for the issue key: {issueKey}{Environment.NewLine}Error: {ex.Message}");
+                throw;
+            }
         }
 
         /// <inheritdoc/>
