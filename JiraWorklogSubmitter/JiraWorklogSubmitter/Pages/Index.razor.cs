@@ -57,21 +57,29 @@ namespace JiraWorklogSubmitter.Pages
             var allTimeStrings = _jiraWorklogEntries.Select(worklogEntry => worklogEntry.TimeSpent).ToList();
             var totalTimeSpan = new TimeSpan(); // Clear the current value since we are going to build a new one
 
-            foreach (var timeString in allTimeStrings)
+            foreach (var timeString in allTimeStrings.Where(t => !string.IsNullOrEmpty(t)))
             {
-                var match = regex.Match(timeString);
-                if (match.Success)
+                try
                 {
-                    int.TryParse(match.Groups["day"].Value, out var day);
-                    int.TryParse(match.Groups["hour"].Value, out var hour);
-                    int.TryParse(match.Groups["minute"].Value, out var minute);
-                    var newTimeSpan = new TimeSpan(day, hour, minute);
-                    totalTimeSpan = totalTimeSpan.Add(newTimeSpan);
+                    var match = regex.Match(timeString);
+                    if (match.Success)
+                    {
+                        int.TryParse(match.Groups["day"].Value, out var day);
+                        int.TryParse(match.Groups["hour"].Value, out var hour);
+                        int.TryParse(match.Groups["minute"].Value, out var minute);
+                        var newTimeSpan = new TimeSpan(day, hour, minute);
+                        totalTimeSpan = totalTimeSpan.Add(newTimeSpan);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"No match on {timeString}");
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    Console.WriteLine($"No match on {timeString}");
+                    Console.WriteLine($"An error occured when trying to parse the time for: {timeString}{Environment.NewLine}Error: {ex.Message}");
                 }
+                
             }
 
             _totalTimeSpent = totalTimeSpan.ToString();

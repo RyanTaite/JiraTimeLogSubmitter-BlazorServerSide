@@ -32,33 +32,49 @@ namespace JiraWorklogSubmitter.Services
         /// <inheritdoc/>
         public async Task<string> SubmitTimeLogAsync(ICollection<JiraWorklogEntry> jiraWorkLogEntries)
         {
-            var jiraClient = _httpClientFactory.CreateClient(HttpClientFactoryNameEmum.Jira.ToString());
-
-            foreach (var jiraWorklogEntry in jiraWorkLogEntries.Where(j => !string.IsNullOrEmpty(j.Ticket) && !string.IsNullOrEmpty(j.TimeSpent)))
+            try
             {
-                var worklogUrl = $"{_jiraSettings.Value.ApiUrl}issue/{jiraWorklogEntry.Ticket}/worklog";
+                var jiraClient = _httpClientFactory.CreateClient(HttpClientFactoryNameEmum.Jira.ToString());
 
-                var request = new HttpRequestMessage(HttpMethod.Post, worklogUrl);
+                foreach (var jiraWorklogEntry in jiraWorkLogEntries.Where(j => !string.IsNullOrEmpty(j.Ticket) && !string.IsNullOrEmpty(j.TimeSpent)))
+                {
+                    try
+                    {
+                        var worklogUrl = $"{_jiraSettings.Value.ApiUrl}issue/{jiraWorklogEntry.Ticket}/worklog";
 
-                var jsonBody = JsonConvert.SerializeObject(jiraWorklogEntry);
+                        var request = new HttpRequestMessage(HttpMethod.Post, worklogUrl);
 
-                var jiraWorkLogEntryHttpRequestContent = new StringContent(
-                        jsonBody,
-                        Encoding.UTF8,
-                        ApplicationJson
-                    );
+                        var jsonBody = JsonConvert.SerializeObject(jiraWorklogEntry);
 
-                request.Content = jiraWorkLogEntryHttpRequestContent;
+                        var jiraWorkLogEntryHttpRequestContent = new StringContent(
+                                jsonBody,
+                                Encoding.UTF8,
+                                ApplicationJson
+                            );
 
-                _logger.LogDebug($"Attempting to submit: {jsonBody} to the url: {worklogUrl}");
-                using var httpResponse = await jiraClient.SendAsync(request);
+                        request.Content = jiraWorkLogEntryHttpRequestContent;
 
-                //TODO: Need to handle a scenario where one of the submit fails in the middle
-                var responseBody = httpResponse.EnsureSuccessStatusCode();
+                        _logger.LogDebug($"Attempting to submit: {jsonBody} to the url: {worklogUrl}");
+                        using var httpResponse = await jiraClient.SendAsync(request);
+
+                        //TODO: Need to handle a scenario where one of the submit fails in the middle
+                        var responseBody = httpResponse.EnsureSuccessStatusCode();
+                    }
+                    catch (HttpRequestException hre)
+                    {
+                        _logger.LogError(hre, $"An error occured in {nameof(SubmitTimeLogAsync)}{Environment.NewLine}Error: {hre.Message}");
+                        //TODO: Create a system to return the collection of jiraWorkLogsentries indicating if they passed or failed. We can then determine how to use the info in the frontend.
+                    }
+                }
+
+                //TODO: Return some kind of response indicating a success or failure
+                return string.Empty;
             }
-
-            //TODO: Return some kind of response indicating a success or failure
-            return string.Empty;
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"An error occured in {nameof(SubmitTimeLogAsync)} when trying to submit entries{Environment.NewLine}Error: {ex.Message}");
+                throw;
+            }
         }
 
         /// <inheritdoc/>
@@ -83,8 +99,9 @@ namespace JiraWorklogSubmitter.Services
 
                 return issueResponseObject.Fields.Summary;
             }
-            catch (HttpRequestException)
+            catch (HttpRequestException hre)
             {
+                _logger.LogWarning(hre, $"An error occured in {nameof(GetJiraTicketSummaryAsync)} when trying to get the summary for the issue key: {issueKey}{Environment.NewLine}Error: {hre.Message}");
                 return "ERROR: UNABLE TO GET SUMMARY FOR THAT ISSUE!";
             }
             catch (Exception ex)
