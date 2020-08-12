@@ -181,3 +181,17 @@ app {
         display: block;
     }
 }
+
+
+/* Custom stuff, (tries to) use BEM syntax */
+.textarea-resizable {
+    resize: both;    
+}
+
+.textarea-resizable--has-minimum-width {
+    min-width: 200px;
+}
+
+.textarea-resizable--has-minimum-height {
+    min-height: 100px;
+}
