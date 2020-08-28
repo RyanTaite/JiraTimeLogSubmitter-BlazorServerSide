@@ -49,7 +49,7 @@ namespace JiraWorklogSubmitter
             services.AddHttpClient();
             services.AddHttpClient(HttpClientFactoryNameEmum.Jira.ToString(), client =>
             {
-                client.BaseAddress = new Uri(JiraSettings.BaseUrl);   //TODO: Get this from appsettings.local.json
+                client.BaseAddress = new Uri(JiraSettings.BaseUrl);
                 client.DefaultRequestHeaders.Add("Accept", "application/json");
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", GetEncodedEmailAndToken());
             });
