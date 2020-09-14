@@ -6,39 +6,21 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace JiraWorklogSubmitter.Pages
+namespace JiraWorklogSubmitter.Pages.Components
 {
-    public partial class Index : ComponentBase
+    public partial class WorklogEntry : ComponentBase
     {
-        private readonly ICollection<JiraWorklogEntry> _jiraWorklogEntries = new List<JiraWorklogEntry>() { new JiraWorklogEntry() };
-        private string _totalTimeSpent { get; set; }
+        [Parameter]
+        public JiraWorklogEntry JiraWorklogEntry { get; set; }
+
+        [Parameter]
+        public ICollection<JiraWorklogEntry> JiraWorklogEntries { get; set; }
+
+        [Parameter]
+        public string _totalTimeSpent { get; set; }
 
         protected override async Task OnInitializedAsync()
         {
-        }
-
-        private void AddNewTimeEntry()
-        {
-            var newTimeEntry = new JiraWorklogEntry();
-            _jiraWorklogEntries.Add(newTimeEntry);
-        }
-
-        private async Task HandleValidSubmitAsync()
-        {
-            // I believe this is still being called, even when a JiraWorklogEntry has invalid data, because I'm working with a collection of objects rather than individual objects.
-            // ".NET Core 3.1 Preview 2 introduces experimental support for object graph validation using data annotations" tells me that my list validation simply isn't supported yet.
-            Console.WriteLine("Handling Valid Submit");
-            await TimeEntryService.SubmitTimeLogAsync(_jiraWorklogEntries);
-        }
-
-        private async Task HandleInvalidSubmitAsync()
-        {
-            Console.WriteLine("Handling Invalid Submit");
-        }
-
-        private void DeleteEntry(JiraWorklogEntry jiraWorklogEntry)
-        {
-            _jiraWorklogEntries.Remove(jiraWorklogEntry);
         }
 
         private async Task GetJiraTicketSummaryAsync(JiraWorklogEntry jiraWorklogEntry)
@@ -59,7 +41,7 @@ namespace JiraWorklogSubmitter.Pages
 
             var regex = new Regex(patternCombined);
 
-            var allTimeStrings = _jiraWorklogEntries.Select(worklogEntry => worklogEntry.TimeSpent).ToList();
+            var allTimeStrings = JiraWorklogEntries.Select(worklogEntry => worklogEntry.TimeSpent).ToList();
             var totalTimeSpan = new TimeSpan(); // Clear the current value since we are going to build a new one
 
             foreach (var timeString in allTimeStrings.Where(t => !string.IsNullOrEmpty(t)))
@@ -73,7 +55,9 @@ namespace JiraWorklogSubmitter.Pages
                         int.TryParse(match.Groups["hour"].Value, out var hour);
                         int.TryParse(match.Groups["minute"].Value, out var minute);
                         var newTimeSpan = new TimeSpan(day, hour, minute);
+                        Console.WriteLine($"Adding {newTimeSpan} to {totalTimeSpan}");
                         totalTimeSpan = totalTimeSpan.Add(newTimeSpan);
+                        Console.WriteLine($"Totalling {totalTimeSpan}");
                     }
                     else
                     {
@@ -84,10 +68,15 @@ namespace JiraWorklogSubmitter.Pages
                 {
                     Console.WriteLine($"An error occured when trying to parse the time for: {timeString}{Environment.NewLine}Error: {ex.Message}");
                 }
-                
+
             }
 
             _totalTimeSpent = totalTimeSpan.ToString();
+        }
+
+        private void DeleteEntry(JiraWorklogEntry jiraWorklogEntry)
+        {
+            JiraWorklogEntries.Remove(jiraWorklogEntry);
         }
     }
 }

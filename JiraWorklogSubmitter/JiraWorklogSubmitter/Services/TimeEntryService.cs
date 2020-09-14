@@ -32,6 +32,8 @@ namespace JiraWorklogSubmitter.Services
         /// <inheritdoc/>
         public async Task<string> SubmitTimeLogAsync(ICollection<JiraWorklogEntry> jiraWorkLogEntries)
         {
+            throw new NotImplementedException();
+
             try
             {
                 var jiraClient = _httpClientFactory.CreateClient(HttpClientFactoryNameEmum.Jira.ToString());

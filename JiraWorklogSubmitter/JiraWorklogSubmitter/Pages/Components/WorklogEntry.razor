@@ -1,0 +1,53 @@
+﻿@* Needs to have: Ticket, Summary, Time Spent, Comment, and a remove button *@
+@using JiraWorklogSubmitter.Services.Interfaces
+
+@inject ITimeEntryService TimeEntryService
+
+<div class="row">
+    <div class="form-group col-2">
+        <input id="@($"{JiraWorklogEntry.Id}-ticket")" value="@JiraWorklogEntry.Ticket"
+               class="col"
+               placeholder="CTS-302"
+               @onchange="@(async e =>
+                                {
+                                    JiraWorklogEntry.Ticket = e.Value.ToString();
+                                    await GetJiraTicketSummaryAsync(JiraWorklogEntry);
+                                })" />
+    </div>
+    <div id="@($"{JiraWorklogEntry.Id}-summary")" class="form-group col-3">
+        <InputText @bind-Value="JiraWorklogEntry.Summary"
+                   class="col"
+                   readonly
+                   disabled
+                   placeholder="Summary" tabindex="-1" />
+    </div>
+    <div id="@($"{JiraWorklogEntry.Id}-timespent")" class="form-group col-2">
+        <input value="@JiraWorklogEntry.TimeSpent"
+               class="col"
+               placeholder="1d 2h 3m"
+               @onchange="@(e =>
+                                {
+                                    JiraWorklogEntry.TimeSpent = e.Value.ToString();
+                                    UpdateTotalTime();
+                                })" />
+    </div>
+    <div id="@($"{JiraWorklogEntry.Id}-comment")" class="form-group col-3">
+        <InputTextArea @bind-Value="JiraWorklogEntry.Comment"
+                       placeholder="Optional comment"
+                       spellcheck="true"
+                       class="col textarea-resizable textarea-resizable--has-minimum-height textarea-resizable--has-minimum-width" />
+    </div>
+    <div id="@($"{JiraWorklogEntry.Id}-remove")" class="form-group col-2">
+        <button type="button"
+                class="btn btn-danger col"
+                tabindex="-1"
+                @onclick="@(e =>
+                            {
+                                DeleteEntry(JiraWorklogEntry);
+                                UpdateTotalTime();
+                            })">
+            <i class="oi oi-circle-x"></i>
+            &nbsp;Remove
+        </button>
+    </div>
+</div>
