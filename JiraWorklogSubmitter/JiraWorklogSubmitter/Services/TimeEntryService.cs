@@ -35,7 +35,7 @@ namespace JiraWorklogSubmitter.Services
             try
             {
                 var jiraClient = _httpClientFactory.CreateClient(HttpClientFactoryNameEmum.Jira.ToString());
-                var jiraWorkLogEntriesToSubmit = jiraWorkLogEntries.Where(j => !string.IsNullOrEmpty(j.Ticket) && !string.IsNullOrEmpty(j.TimeSpent));
+                var jiraWorkLogEntriesToSubmit = jiraWorkLogEntries.Where(j => !string.IsNullOrEmpty(j.Ticket) && !string.IsNullOrEmpty(j.TimeSpent)).ToList();
 
                 foreach (var jiraWorklogEntry in jiraWorkLogEntriesToSubmit)
                 {
