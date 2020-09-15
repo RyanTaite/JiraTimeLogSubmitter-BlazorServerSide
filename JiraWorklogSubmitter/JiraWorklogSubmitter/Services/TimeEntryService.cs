@@ -30,13 +30,14 @@ namespace JiraWorklogSubmitter.Services
         }
 
         /// <inheritdoc/>
-        public async Task<string> SubmitTimeLogAsync(ICollection<JiraWorklogEntry> jiraWorkLogEntries)
+        public async Task<ICollection<JiraWorklogEntry>> SubmitTimeLogAsync(ICollection<JiraWorklogEntry> jiraWorkLogEntries)
         {
             try
             {
                 var jiraClient = _httpClientFactory.CreateClient(HttpClientFactoryNameEmum.Jira.ToString());
+                var jiraWorkLogEntriesToSubmit = jiraWorkLogEntries.Where(j => !string.IsNullOrEmpty(j.Ticket) && !string.IsNullOrEmpty(j.TimeSpent));
 
-                foreach (var jiraWorklogEntry in jiraWorkLogEntries.Where(j => !string.IsNullOrEmpty(j.Ticket) && !string.IsNullOrEmpty(j.TimeSpent)))
+                foreach (var jiraWorklogEntry in jiraWorkLogEntriesToSubmit)
                 {
                     try
                     {
@@ -59,6 +60,9 @@ namespace JiraWorklogSubmitter.Services
 
                         //TODO: Need to handle a scenario where one of the submit fails in the middle
                         var responseBody = httpResponse.EnsureSuccessStatusCode();
+
+                        // Remove the succesful entry from the list so we can return it
+                        jiraWorkLogEntries.Remove(jiraWorklogEntry);
                     }
                     catch (HttpRequestException hre)
                     {
@@ -67,8 +71,8 @@ namespace JiraWorklogSubmitter.Services
                     }
                 }
 
-                //TODO: Return some kind of response indicating a success or failure
-                return string.Empty;
+                //TODO: Return some kind of response indicating a success or failure. For now we will return the list of unsuccesful submits.
+                return jiraWorkLogEntries;
             }
             catch (Exception ex)
             {

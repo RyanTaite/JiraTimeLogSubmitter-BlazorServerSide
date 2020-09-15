@@ -10,7 +10,7 @@ namespace JiraWorklogSubmitter.Pages
 {
     public partial class Index : ComponentBase
     {
-        private readonly ICollection<JiraWorklogEntry> _jiraWorklogEntries = new List<JiraWorklogEntry>() { new JiraWorklogEntry() };
+        private ICollection<JiraWorklogEntry> _jiraWorklogEntries { get; set; } = new List<JiraWorklogEntry>() { new JiraWorklogEntry() };
         private string _totalTimeSpent = string.Empty;
 
         protected override async Task OnInitializedAsync()
@@ -28,7 +28,10 @@ namespace JiraWorklogSubmitter.Pages
             // I believe this is still being called, even when a JiraWorklogEntry has invalid data, because I'm working with a collection of objects rather than individual objects.
             // ".NET Core 3.1 Preview 2 introduces experimental support for object graph validation using data annotations" tells me that my list validation simply isn't supported yet.
             Console.WriteLine("Handling Valid Submit");
-            await TimeEntryService.SubmitTimeLogAsync(_jiraWorklogEntries);
+            var result = await TimeEntryService.SubmitTimeLogAsync(_jiraWorklogEntries);
+            _jiraWorklogEntries = result;
+            UpdateTotalTime();
+            //TODO: Issue #2, show a popup dialog or something saying "Submitted # entires"
         }
 
         private void DeleteEntry(JiraWorklogEntry jiraWorklogEntry)
