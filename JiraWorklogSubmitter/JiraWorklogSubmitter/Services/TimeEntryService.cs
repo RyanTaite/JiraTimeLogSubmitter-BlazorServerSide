@@ -30,19 +30,20 @@ namespace JiraWorklogSubmitter.Services
         }
 
         /// <inheritdoc/>
-        public async Task<string> SubmitJiraWorklogEntriesAsync(ICollection<JiraWorklogEntry> jiraWorkLogEntries)
+        public async Task<ICollection<JiraWorklogEntry>> SubmitJiraWorklogEntriesAsync(ICollection<JiraWorklogEntry> jiraWorkLogEntries)
         {
             try
             {
                 var jiraClient = _httpClientFactory.CreateClient(HttpClientFactoryNameEmum.Jira.ToString());
+                var jiraWorkLogEntriesToSubmit = jiraWorkLogEntries.Where(j => !string.IsNullOrEmpty(j.Ticket) && !string.IsNullOrEmpty(j.TimeSpent)).ToList();
 
-                foreach (var jiraWorklogEntry in jiraWorkLogEntries.Where(j => !string.IsNullOrEmpty(j.Ticket) && !string.IsNullOrEmpty(j.TimeSpent)))
+                foreach (var jiraWorklogEntry in jiraWorkLogEntriesToSubmit)
                 {
-                    await SubmitJiraWorklogEntryAsync(jiraClient, jiraWorklogEntry);
+                    await SubmitJiraWorklogEntryAsync(jiraClient, jiraWorklogEntry, jiraWorkLogEntries);
                 }
 
-                //TODO: Return some kind of response indicating a success or failure
-                return string.Empty;
+                //TODO: Return something with more details about the success/failures of the entries
+                return jiraWorkLogEntries;
             }
             catch (Exception ex)
             {
@@ -51,35 +52,31 @@ namespace JiraWorklogSubmitter.Services
             }
         }
 
-        private async Task SubmitJiraWorklogEntryAsync(HttpClient jiraClient, JiraWorklogEntry jiraWorklogEntry)
+        private async Task SubmitJiraWorklogEntryAsync(HttpClient jiraClient, JiraWorklogEntry jiraWorklogEntry, ICollection<JiraWorklogEntry> jiraWorkLogEntries)
         {
-            try
-            {
-                var worklogUrl = $"{_jiraSettings.Value.ApiUrl}issue/{jiraWorklogEntry.Ticket}/worklog";
+            var worklogUrl = $"{_jiraSettings.Value.ApiUrl}issue/{jiraWorklogEntry.Ticket}/worklog";
 
-                var request = new HttpRequestMessage(HttpMethod.Post, worklogUrl);
+            var request = new HttpRequestMessage(HttpMethod.Post, worklogUrl);
 
-                var jsonBody = JsonConvert.SerializeObject(jiraWorklogEntry);
+            var jsonBody = JsonConvert.SerializeObject(jiraWorklogEntry);
 
-                var jiraWorkLogEntryHttpRequestContent = new StringContent(
-                        jsonBody,
-                        Encoding.UTF8,
-                        ApplicationJson
-                    );
+            var jiraWorkLogEntryHttpRequestContent = new StringContent(
+                    jsonBody,
+                    Encoding.UTF8,
+                    ApplicationJson
+                );
 
-                request.Content = jiraWorkLogEntryHttpRequestContent;
+            request.Content = jiraWorkLogEntryHttpRequestContent;
 
-                _logger.LogDebug($"Attempting to submit: {jsonBody} to the url: {worklogUrl}");
-                using var httpResponse = await jiraClient.SendAsync(request);
+            _logger.LogDebug($"Attempting to submit: {jsonBody} to the url: {worklogUrl}");
 
-                //TODO: Need to handle a scenario where one of the submit fails in the middle
-                var responseBody = httpResponse.EnsureSuccessStatusCode();
-            }
-            catch (HttpRequestException hre)
-            {
-                _logger.LogError(hre, $"An error occured in {nameof(SubmitJiraWorklogEntriesAsync)}{Environment.NewLine}Error: {hre.Message}");
-                //TODO: Create a system to return the collection of jiraWorkLogsentries indicating if they passed or failed. We can then determine how to use the info in the frontend.
-            }
+            using var httpResponse = await jiraClient.SendAsync(request);
+
+            //TODO: Need to handle a scenario where one of the submit fails in the middle
+            var responseBody = httpResponse.EnsureSuccessStatusCode();
+
+            // Remove the succesful entry from the list so we can return it
+            jiraWorkLogEntries.Remove(jiraWorklogEntry);
         }
 
         /// <inheritdoc/>

@@ -47,9 +47,11 @@ namespace JiraWorklogSubmitter
             AddTransients(services);
 
             services.AddHttpClient();
+            
+            // Create an HTTP Client for the Jira api to save us some time setting up the credentials needed
             services.AddHttpClient(HttpClientFactoryNameEmum.Jira.ToString(), client =>
             {
-                client.BaseAddress = new Uri(JiraSettings.BaseUrl);   //TODO: Get this from appsettings.local.json
+                client.BaseAddress = new Uri(JiraSettings.BaseUrl);
                 client.DefaultRequestHeaders.Add("Accept", "application/json");
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", GetEncodedEmailAndToken());
             });
