@@ -30,7 +30,7 @@ namespace JiraWorklogSubmitter.Services
         }
 
         /// <inheritdoc/>
-        public async Task<string> SubmitTimeLogAsync(ICollection<JiraWorklogEntry> jiraWorkLogEntries)
+        public async Task<string> SubmitJiraWorklogEntriesAsync(ICollection<JiraWorklogEntry> jiraWorkLogEntries)
         {
             try
             {
@@ -38,33 +38,7 @@ namespace JiraWorklogSubmitter.Services
 
                 foreach (var jiraWorklogEntry in jiraWorkLogEntries.Where(j => !string.IsNullOrEmpty(j.Ticket) && !string.IsNullOrEmpty(j.TimeSpent)))
                 {
-                    try
-                    {
-                        var worklogUrl = $"{_jiraSettings.Value.ApiUrl}issue/{jiraWorklogEntry.Ticket}/worklog";
-
-                        var request = new HttpRequestMessage(HttpMethod.Post, worklogUrl);
-
-                        var jsonBody = JsonConvert.SerializeObject(jiraWorklogEntry);
-
-                        var jiraWorkLogEntryHttpRequestContent = new StringContent(
-                                jsonBody,
-                                Encoding.UTF8,
-                                ApplicationJson
-                            );
-
-                        request.Content = jiraWorkLogEntryHttpRequestContent;
-
-                        _logger.LogDebug($"Attempting to submit: {jsonBody} to the url: {worklogUrl}");
-                        using var httpResponse = await jiraClient.SendAsync(request);
-
-                        //TODO: Need to handle a scenario where one of the submit fails in the middle
-                        var responseBody = httpResponse.EnsureSuccessStatusCode();
-                    }
-                    catch (HttpRequestException hre)
-                    {
-                        _logger.LogError(hre, $"An error occured in {nameof(SubmitTimeLogAsync)}{Environment.NewLine}Error: {hre.Message}");
-                        //TODO: Create a system to return the collection of jiraWorkLogsentries indicating if they passed or failed. We can then determine how to use the info in the frontend.
-                    }
+                    await SubmitJiraWorklogEntryAsync(jiraClient, jiraWorklogEntry);
                 }
 
                 //TODO: Return some kind of response indicating a success or failure
@@ -72,8 +46,39 @@ namespace JiraWorklogSubmitter.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"An error occured in {nameof(SubmitTimeLogAsync)} when trying to submit entries{Environment.NewLine}Error: {ex.Message}");
+                _logger.LogError(ex, $"An error occured in {nameof(SubmitJiraWorklogEntriesAsync)} when trying to submit entries{Environment.NewLine}Error: {ex.Message}");
                 throw;
+            }
+        }
+
+        private async Task SubmitJiraWorklogEntryAsync(HttpClient jiraClient, JiraWorklogEntry jiraWorklogEntry)
+        {
+            try
+            {
+                var worklogUrl = $"{_jiraSettings.Value.ApiUrl}issue/{jiraWorklogEntry.Ticket}/worklog";
+
+                var request = new HttpRequestMessage(HttpMethod.Post, worklogUrl);
+
+                var jsonBody = JsonConvert.SerializeObject(jiraWorklogEntry);
+
+                var jiraWorkLogEntryHttpRequestContent = new StringContent(
+                        jsonBody,
+                        Encoding.UTF8,
+                        ApplicationJson
+                    );
+
+                request.Content = jiraWorkLogEntryHttpRequestContent;
+
+                _logger.LogDebug($"Attempting to submit: {jsonBody} to the url: {worklogUrl}");
+                using var httpResponse = await jiraClient.SendAsync(request);
+
+                //TODO: Need to handle a scenario where one of the submit fails in the middle
+                var responseBody = httpResponse.EnsureSuccessStatusCode();
+            }
+            catch (HttpRequestException hre)
+            {
+                _logger.LogError(hre, $"An error occured in {nameof(SubmitJiraWorklogEntriesAsync)}{Environment.NewLine}Error: {hre.Message}");
+                //TODO: Create a system to return the collection of jiraWorkLogsentries indicating if they passed or failed. We can then determine how to use the info in the frontend.
             }
         }
 

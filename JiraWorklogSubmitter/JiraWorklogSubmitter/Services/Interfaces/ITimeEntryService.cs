@@ -11,7 +11,7 @@ namespace JiraWorklogSubmitter.Services.Interfaces
         /// </summary>
         /// <param name="jiraWorkLogEntries">The collection of worklogs to submit</param>
         /// <returns></returns>
-        Task<string> SubmitTimeLogAsync(ICollection<JiraWorklogEntry> jiraWorkLogEntries);
+        Task<string> SubmitJiraWorklogEntriesAsync(ICollection<JiraWorklogEntry> jiraWorkLogEntries);
 
         /// <summary>
         /// Gets the summary (aka Title) of a ticket

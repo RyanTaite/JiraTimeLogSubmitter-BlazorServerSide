@@ -28,7 +28,7 @@ namespace JiraWorklogSubmitter.Pages
             // I believe this is still being called, even when a JiraWorklogEntry has invalid data, because I'm working with a collection of objects rather than individual objects.
             // ".NET Core 3.1 Preview 2 introduces experimental support for object graph validation using data annotations" tells me that my list validation simply isn't supported yet.
             Console.WriteLine("Handling Valid Submit");
-            await TimeEntryService.SubmitTimeLogAsync(_jiraWorklogEntries);
+            await TimeEntryService.SubmitJiraWorklogEntriesAsync(_jiraWorklogEntries);
         }
 
         private void DeleteEntry(JiraWorklogEntry jiraWorklogEntry)
