@@ -43,6 +43,10 @@ namespace JiraWorklogSubmitter.Services
                 }
 
                 //TODO: Return something with more details about the success/failures of the entries
+                if (!jiraWorkLogEntries.Any()) {
+                    jiraWorkLogEntries.Add(new JiraWorklogEntry());
+                }
+                
                 return jiraWorkLogEntries;
             }
             catch (Exception ex)
