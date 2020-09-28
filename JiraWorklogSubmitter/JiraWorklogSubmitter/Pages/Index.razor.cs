@@ -13,10 +13,6 @@ namespace JiraWorklogSubmitter.Pages
         private ICollection<JiraWorklogEntry> _jiraWorklogEntries { get; set; } = new List<JiraWorklogEntry>() { new JiraWorklogEntry() };
         private string _totalTimeSpent = string.Empty;
 
-        protected override async Task OnInitializedAsync()
-        {
-        }
-
         private void AddNewTimeEntry()
         {
             var newTimeEntry = new JiraWorklogEntry();
