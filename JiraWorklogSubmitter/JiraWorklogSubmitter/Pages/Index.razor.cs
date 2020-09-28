@@ -37,6 +37,7 @@ namespace JiraWorklogSubmitter.Pages
 
         private async Task GetJiraTicketSummaryAsync(JiraWorklogEntry jiraWorklogEntry)
         {
+            jiraWorklogEntry.Summary = "Loading...";
             var result = await TimeEntryService.GetJiraTicketSummaryAsync(jiraWorklogEntry.Ticket);
             jiraWorklogEntry.Summary = result;
         }
