@@ -48,6 +48,7 @@ else
                                 <input value="@jiraWorklogEntry.Ticket" 
                                        class="col" 
                                        placeholder="CTS-302" 
+                                       disabled="@_isSubmitting"
                                        @onchange="@(async e =>
                                         {
                                             jiraWorklogEntry.Ticket = e.Value.ToString();
@@ -65,6 +66,7 @@ else
                                 <input value="@jiraWorklogEntry.TimeSpent" 
                                        class="col" 
                                        placeholder="1d 2h 3m" 
+                                       disabled="@_isSubmitting"
                                        @onchange="@(e =>
                                         {
                                             jiraWorklogEntry.TimeSpent = e.Value.ToString();
@@ -75,12 +77,14 @@ else
                                 <InputTextArea @bind-Value="jiraWorklogEntry.Comment" 
                                                placeholder="Optional comment" 
                                                spellcheck="true" 
+                                               disabled="@_isSubmitting"
                                                class="col textarea-resizable textarea-resizable--has-minimum-height textarea-resizable--has-minimum-width"  />
                             </td>
                             <td class="col-sm">
                                 <button type="button"
                                         class="btn btn-danger col"
                                         tabindex="-1"
+                                        disabled="@_isSubmitting"
                                         @onclick="@(e =>
                                         {
                                             DeleteEntry(jiraWorklogEntry);
