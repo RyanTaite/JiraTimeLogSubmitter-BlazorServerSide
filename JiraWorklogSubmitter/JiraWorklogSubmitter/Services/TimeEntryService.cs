@@ -43,6 +43,8 @@ namespace JiraWorklogSubmitter.Services
                 }
 
                 //TODO: Return something with more details about the success/failures of the entries
+
+                // Populate the list with at least one blank JiraWorklogEntry
                 if (!jiraWorkLogEntries.Any()) {
                     jiraWorkLogEntries.Add(new JiraWorklogEntry());
                 }
@@ -58,29 +60,40 @@ namespace JiraWorklogSubmitter.Services
 
         private async Task SubmitJiraWorklogEntryAsync(HttpClient jiraClient, JiraWorklogEntry jiraWorklogEntry, ICollection<JiraWorklogEntry> jiraWorkLogEntries)
         {
-            var worklogUrl = $"{_jiraSettings.Value.ApiUrl}issue/{jiraWorklogEntry.Ticket}/worklog";
+            try
+            {
+                var worklogUrl = $"{_jiraSettings.Value.ApiUrl}issue/{jiraWorklogEntry.Ticket}/worklog";
 
-            var request = new HttpRequestMessage(HttpMethod.Post, worklogUrl);
+                var request = new HttpRequestMessage(HttpMethod.Post, worklogUrl);
 
-            var jsonBody = JsonConvert.SerializeObject(jiraWorklogEntry);
+                var jsonBody = JsonConvert.SerializeObject(jiraWorklogEntry);
 
-            var jiraWorkLogEntryHttpRequestContent = new StringContent(
-                    jsonBody,
-                    Encoding.UTF8,
-                    ApplicationJson
-                );
+                var jiraWorkLogEntryHttpRequestContent = new StringContent(
+                        jsonBody,
+                        Encoding.UTF8,
+                        ApplicationJson
+                    );
 
-            request.Content = jiraWorkLogEntryHttpRequestContent;
+                request.Content = jiraWorkLogEntryHttpRequestContent;
 
-            _logger.LogDebug($"Attempting to submit: {jsonBody} to the url: {worklogUrl}");
+                _logger.LogDebug($"Attempting to submit: {jsonBody} to the url: {worklogUrl}");
 
-            using var httpResponse = await jiraClient.SendAsync(request);
+                using var httpResponse = await jiraClient.SendAsync(request);
 
-            //TODO: Need to handle a scenario where one of the submit fails in the middle
-            var responseBody = httpResponse.EnsureSuccessStatusCode();
+                var responseBody = httpResponse.EnsureSuccessStatusCode();
 
-            // Remove the succesful entry from the list so we can return it
-            jiraWorkLogEntries.Remove(jiraWorklogEntry);
+                // Remove the succesful entry from the list so we can return it
+                jiraWorkLogEntries.Remove(jiraWorklogEntry);
+            }
+            catch (HttpRequestException hre)
+            {
+                _logger.LogWarning(hre, $"An http response was not successful when in {nameof(SubmitJiraWorklogEntryAsync)} when trying to submit a worklog for: {jiraWorklogEntry.Ticket}{Environment.NewLine}Error: {hre.Message}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"An error occured in {nameof(SubmitJiraWorklogEntryAsync)} when trying to submit a worklog for: {jiraWorklogEntry.Ticket}{Environment.NewLine}Error: {ex.Message}");
+                throw;
+            }
         }
 
         /// <inheritdoc/>
@@ -107,7 +120,7 @@ namespace JiraWorklogSubmitter.Services
             }
             catch (HttpRequestException hre)
             {
-                _logger.LogWarning(hre, $"An error occured in {nameof(GetJiraTicketSummaryAsync)} when trying to get the summary for the issue key: {issueKey}{Environment.NewLine}Error: {hre.Message}");
+                _logger.LogWarning(hre, $"An http response was not successful when in {nameof(GetJiraTicketSummaryAsync)} when trying to get the summary for the issue key: {issueKey}{Environment.NewLine}Error: {hre.Message}");
                 return "ERROR: UNABLE TO GET SUMMARY FOR THAT ISSUE!";
             }
             catch (Exception ex)
