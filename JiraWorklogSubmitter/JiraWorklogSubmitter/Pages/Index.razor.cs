@@ -84,7 +84,7 @@ namespace JiraWorklogSubmitter.Pages
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"An error occured when trying to parse the time for: {timeString}{Environment.NewLine}Error: {ex.Message}");
+                    Console.WriteLine($"An error occurred when trying to parse the time for: {timeString}{Environment.NewLine}Error: {ex.Message}");
                 }
                 
             }

@@ -34,7 +34,7 @@ namespace JiraWorklogSubmitter.Services
         {
             try
             {
-                var jiraClient = _httpClientFactory.CreateClient(HttpClientFactoryNameEmum.Jira.ToString());
+                var jiraClient = _httpClientFactory.CreateClient(HttpClientFactoryNameEnum.Jira.ToString());
                 var jiraWorkLogEntriesToSubmit = jiraWorkLogEntries.Where(j => !string.IsNullOrEmpty(j.Ticket) && !string.IsNullOrEmpty(j.TimeSpent)).ToList();
 
                 foreach (var jiraWorklogEntry in jiraWorkLogEntriesToSubmit)
@@ -53,7 +53,7 @@ namespace JiraWorklogSubmitter.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"An error occured in {nameof(SubmitJiraWorklogEntriesAsync)} when trying to submit entries{Environment.NewLine}Error: {ex.Message}");
+                _logger.LogError(ex, $"An error occurred in {nameof(SubmitJiraWorklogEntriesAsync)} when trying to submit entries{Environment.NewLine}Error: {ex.Message}");
                 throw;
             }
         }
@@ -82,7 +82,7 @@ namespace JiraWorklogSubmitter.Services
 
                 var responseBody = httpResponse.EnsureSuccessStatusCode();
 
-                // Remove the succesful entry from the list so we can return it
+                // Remove the successful entry from the list so we can return it
                 jiraWorkLogEntries.Remove(jiraWorklogEntry);
             }
             catch (HttpRequestException hre)
@@ -91,7 +91,7 @@ namespace JiraWorklogSubmitter.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"An error occured in {nameof(SubmitJiraWorklogEntryAsync)} when trying to submit a worklog for: {jiraWorklogEntry.Ticket}{Environment.NewLine}Error: {ex.Message}");
+                _logger.LogError(ex, $"An error occurred in {nameof(SubmitJiraWorklogEntryAsync)} when trying to submit a worklog for: {jiraWorklogEntry.Ticket}{Environment.NewLine}Error: {ex.Message}");
                 throw;
             }
         }
@@ -101,7 +101,7 @@ namespace JiraWorklogSubmitter.Services
         {
             try
             {
-                var jiraClient = _httpClientFactory.CreateClient(HttpClientFactoryNameEmum.Jira.ToString());
+                var jiraClient = _httpClientFactory.CreateClient(HttpClientFactoryNameEnum.Jira.ToString());
                 var summaryUrl = $"{_jiraSettings.Value.ApiUrl}issue/{issueKey}?fields=summary";
 
                 var request = new HttpRequestMessage(HttpMethod.Get, summaryUrl);
@@ -125,7 +125,7 @@ namespace JiraWorklogSubmitter.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"An error occured in {nameof(GetJiraTicketSummaryAsync)} when trying to get the summary for the issue key: {issueKey}{Environment.NewLine}Error: {ex.Message}");
+                _logger.LogError(ex, $"An error occurred in {nameof(GetJiraTicketSummaryAsync)} when trying to get the summary for the issue key: {issueKey}{Environment.NewLine}Error: {ex.Message}");
                 throw;
             }
         }
@@ -135,12 +135,12 @@ namespace JiraWorklogSubmitter.Services
         {
             try
             {
-                //TODO: Make a more generic endpoint so we can send different lengths of time (thius week, last week, last two weeks) and maybe authors
+                //TODO: Make a more generic endpoint so we can send different lengths of time (this week, last week, last two weeks) and maybe authors
 
                 // This query gets a list of the tickets that an author submitted worklogs too, not the actual work logs
                 // https://colyar.atlassian.net/rest/api/latest/search?jql=worklogDate >= startOfWeek() and worklogAuthor = "Ryan Taite"&fields=key
 
-                var jiraClient = _httpClientFactory.CreateClient(HttpClientFactoryNameEmum.Jira.ToString());
+                var jiraClient = _httpClientFactory.CreateClient(HttpClientFactoryNameEnum.Jira.ToString());
                 // Using Jira's JQL we can get the tickets that were worked on by the signed in user, but not the actual worklogs themselves.
                 var url = $"{_jiraSettings.Value.ApiUrl}search?jql=worklogDate = \"{targetDate:yyyy-MM-dd}\" and worklogAuthor = \"{_jiraSettings.Value.FullName}\"&fields=summary"; // Filter down the just the summary (ticket title), so we don't get too much info back.
 
@@ -213,7 +213,7 @@ namespace JiraWorklogSubmitter.Services
         /// <returns>A list of matching <see cref="Worklog"/>s</returns>
         private async Task<List<Worklog>> GetWorklogsForDayAndKeysAsync(List<string> allKeys, DateTime targetDate)
         {
-            var jiraClient = _httpClientFactory.CreateClient(HttpClientFactoryNameEmum.Jira.ToString());
+            var jiraClient = _httpClientFactory.CreateClient(HttpClientFactoryNameEnum.Jira.ToString());
 
             var allMatchingWorklogs = new List<Worklog>();
 
