@@ -10,6 +10,8 @@ namespace JiraWorklogSubmitter.Data.ResponseObjects
         /// </summary>
         public Author Author { get; set; }
 
+        public Author UpdateAuthor { get; set; }
+
         public string Comment { get; set; }
 
         public string TimeSpent { get; set; }
@@ -17,5 +19,9 @@ namespace JiraWorklogSubmitter.Data.ResponseObjects
         public int TimeSpentSeconds { get; set; }
 
         public DateTime Created { get; set; }
+
+        public DateTime Updated { get; set; }
+
+        public DateTime Started { get; set; }
     }
 }

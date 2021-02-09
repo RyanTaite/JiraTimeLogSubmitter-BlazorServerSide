@@ -4,6 +4,8 @@
     {
         public string Id { get; set; }
 
+        public string IssueId { get; set; }
+
         public string Expand { get; set; }
 
         public string Self { get; set; }

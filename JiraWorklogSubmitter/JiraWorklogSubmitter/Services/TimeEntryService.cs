@@ -228,7 +228,7 @@ namespace JiraWorklogSubmitter.Services
                 var worklogResponseObject = JsonConvert.DeserializeObject<WorklogResponseObject>(responseBody);
 
                 // Get worklogs created by our user and created on our target date
-                foreach (var worklog in worklogResponseObject.Worklogs.Where(worklog => worklog.Author.DisplayName == _jiraSettings.Value.FullName && worklog.Created.Date == targetDate.Date))
+                foreach (var worklog in worklogResponseObject.Worklogs.Where(worklog => worklog.Author.DisplayName == _jiraSettings.Value.FullName && worklog.Started.Date == targetDate.Date))
                 {
                     worklog.Key = key; // The key doesn't come back with the response, so we have to do it here
                     allMatchingWorklogs.Add(worklog);
