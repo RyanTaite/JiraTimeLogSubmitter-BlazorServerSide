@@ -235,6 +235,15 @@ namespace JiraWorklogSubmitter.Services
                 }
             }
 
+            if (!allMatchingWorklogs.Any())
+            {
+                allMatchingWorklogs.Add(new Worklog()
+                {
+                    Key = "-1",
+                    Comment = "No results found"
+                });
+            }
+
             return allMatchingWorklogs;
         }
     }
