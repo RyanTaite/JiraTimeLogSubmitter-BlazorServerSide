@@ -19,14 +19,29 @@ else
     <EditForm Model="_jiraWorklogEntries" OnValidSubmit="HandleValidSubmitAsync">
         <DataAnnotationsValidator />
         <ValidationSummary />
-        <button type="button" class="btn btn-secondary" @onclick="AddNewTimeEntry">
-            <i class="oi oi-plus"></i>
-            &nbsp;Add New Worklog Entry
-        </button>
-        <button type="submit" class="btn btn-primary" disabled="@_isSubmitting">
-            <i class="oi oi-cloud-upload"></i>
-            &nbsp;@(_isSubmitting ? "Submitting..." : "Submit to Jira")
-        </button>
+        <div class="row justify-content-between">
+            <button type="button" class="btn btn-secondary col-2" @onclick="AddNewTimeEntry">
+                <i class="oi oi-plus"></i>
+                &nbsp;Add New Worklog Entry
+            </button>
+            <button type="submit" class="btn btn-primary col-2" disabled="@_isSubmitting">
+                <i class="oi oi-cloud-upload"></i>
+                &nbsp;@(_isSubmitting ? "Submitting..." : "Submit to Jira")
+            </button>
+            <input value="@_started"
+                   class="col-2"
+                   disabled="@_isSubmitting"
+                   type="date"
+                   @onchange="@(async e =>
+                                {
+                                    // Set the time started for each ticket to the new value
+                                    foreach (var item in _jiraWorklogEntries)
+                                    { 
+                                        var newDate = DateTime.Parse(e.Value.ToString());
+                                        item.Started = newDate;
+                                    }
+                                })" />
+        </div>
 
         <div class="row">
             <div class="col col-12">
@@ -45,27 +60,30 @@ else
                     {
                         <tr class="d-flex">
                             <td class="col-sm">
-                                <input value="@jiraWorklogEntry.Ticket" 
-                                       class="col" 
-                                       placeholder="CTS-302" 
+                                <InputDate @bind-Value="@jiraWorklogEntry.Started" disabled="@_isSubmitting" />
+                            </td>
+                            <td class="col-sm">
+                                <input value="@jiraWorklogEntry.Ticket"
+                                       class="col"
+                                       placeholder="CTS-302"
                                        disabled="@_isSubmitting"
                                        @onchange="@(async e =>
                                         {
                                             jiraWorklogEntry.Ticket = e.Value.ToString();
                                             await GetJiraTicketSummaryAsync(jiraWorklogEntry);
-                                        })"/>
+                                        })" />
                             </td>
                             <td class="col-md">
-                                <InputText @bind-Value="jiraWorklogEntry.Summary" 
-                                           class="col" 
-                                           readonly 
-                                           disabled 
+                                <InputText @bind-Value="jiraWorklogEntry.Summary"
+                                           class="col"
+                                           readonly
+                                           disabled
                                            placeholder="Summary" tabindex="-1" />
                             </td>
                             <td class="col-sm">
-                                <input value="@jiraWorklogEntry.TimeSpent" 
-                                       class="col" 
-                                       placeholder="1d 2h 3m" 
+                                <input value="@jiraWorklogEntry.TimeSpent"
+                                       class="col"
+                                       placeholder="1d 2h 3m"
                                        disabled="@_isSubmitting"
                                        @onchange="@(e =>
                                         {
@@ -74,11 +92,11 @@ else
                                         })" />
                             </td>
                             <td class="col-md">
-                                <InputTextArea @bind-Value="jiraWorklogEntry.Comment" 
-                                               placeholder="Optional comment" 
-                                               spellcheck="true" 
+                                <InputTextArea @bind-Value="jiraWorklogEntry.Comment"
+                                               placeholder="Optional comment"
+                                               spellcheck="true"
                                                disabled="@_isSubmitting"
-                                               class="col textarea-resizable textarea-resizable--has-minimum-height textarea-resizable--has-minimum-width"  />
+                                               class="col textarea-resizable textarea-resizable--has-minimum-height textarea-resizable--has-minimum-width" />
                             </td>
                             <td class="col-sm">
                                 <button type="button"

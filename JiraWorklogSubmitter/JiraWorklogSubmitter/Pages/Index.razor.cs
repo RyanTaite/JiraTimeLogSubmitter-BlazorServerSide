@@ -12,6 +12,7 @@ namespace JiraWorklogSubmitter.Pages
     {
         private ICollection<JiraWorklogEntry> _jiraWorklogEntries { get; set; } = new List<JiraWorklogEntry>() { new JiraWorklogEntry() };
         private string _totalTimeSpent = string.Empty;
+        private DateTime _started = DateTime.Today;
 
         /// <summary>
         /// Used to indicate to the UI if we are currently submitting the worklog entries or not

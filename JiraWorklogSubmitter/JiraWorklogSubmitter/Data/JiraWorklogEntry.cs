@@ -1,7 +1,9 @@
 ﻿using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using JiraWorklogSubmitter.Data.Extensions;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace JiraWorklogSubmitter.Data
 {
@@ -47,9 +49,24 @@ namespace JiraWorklogSubmitter.Data
         [JsonIgnore]    // The JIRA API does not want this
         public string Summary { get => _summary; set => _summary = value?.Trim(); }
 
+        /// <summary>
+        /// When did you work on this ticket?
+        /// </summary>
+        /// <remarks>
+        /// The format should be:   "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+        /// Example:                "2001-07-04T12:08:56.235-0700"
+        /// Note the lack of a ':'
+        /// It's based of Java Datetime formats
+        /// </remarks>
+        [Required]
+        [JsonProperty("started")]
+        [JsonConverter(typeof(JiraDateTimeConverter))]
+        public DateTime Started { get; set; }
+
         public JiraWorklogEntry()
         {
             Id = Guid.NewGuid();
+            Started = DateTime.Today;
         }
     }
 }
