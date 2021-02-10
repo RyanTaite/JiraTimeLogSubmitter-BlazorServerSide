@@ -19,20 +19,24 @@ else
     <EditForm Model="_jiraWorklogEntries" OnValidSubmit="HandleValidSubmitAsync">
         <DataAnnotationsValidator />
         <ValidationSummary />
-        <div class="row justify-content-between">
-            <button type="button" class="btn btn-secondary col-2" @onclick="AddNewTimeEntry">
-                <i class="oi oi-plus"></i>
-                &nbsp;Add New Worklog Entry
-            </button>
-            <button type="submit" class="btn btn-primary col-2" disabled="@_isSubmitting">
-                <i class="oi oi-cloud-upload"></i>
-                &nbsp;@(_isSubmitting ? "Submitting..." : "Submit to Jira")
-            </button>
-            <input value="@_started"
-                   class="col-2"
-                   disabled="@_isSubmitting"
-                   type="date"
-                   @onchange="@(async e =>
+        <div class="d-flex justify-content-between">
+            <div>
+                <button type="button" class="btn btn-secondary" @onclick="AddNewTimeEntry">
+                    <i class="oi oi-plus"></i>
+                    &nbsp;Add New Worklog Entry
+                </button>
+                <button type="submit" class="btn btn-primary" disabled="@_isSubmitting">
+                    <i class="oi oi-cloud-upload"></i>
+                    &nbsp;@(_isSubmitting ? "Submitting..." : "Submit to Jira")
+                </button>
+            </div>
+            <div class="form-group">
+                <input value="@_started"
+                    id="globalStartedDate"
+                    class="form-control"
+                    disabled="@_isSubmitting"
+                    type="date"
+                    @onchange="@(async e =>
                                 {
                                     // Set the time started for each ticket to the new value
                                     foreach (var item in _jiraWorklogEntries)
@@ -41,6 +45,7 @@ else
                                         item.Started = newDate;
                                     }
                                 })" />
+            </div>
         </div>
 
         <div class="row">
