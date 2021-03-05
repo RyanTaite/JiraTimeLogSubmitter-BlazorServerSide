@@ -65,7 +65,7 @@ else
                     {
                         <tr class="d-flex">
                             <td class="col-sm">
-                                <InputDate @bind-Value="@jiraWorklogEntry.Started" disabled="@_isSubmitting" />
+                                <InputDate @bind-Value="@jiraWorklogEntry.Started" disabled="@_isSubmitting" tabindex="-1" />
                             </td>
                             <td class="col-sm">
                                 <input value="@jiraWorklogEntry.Ticket"
