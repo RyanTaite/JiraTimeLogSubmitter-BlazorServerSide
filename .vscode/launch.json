@@ -10,7 +10,7 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/JiraWorklogSubmitter/JiraWorklogSubmitter/bin/Debug/netcoreapp3.1/JiraWorklogSubmitter.dll",
+            "program": "${workspaceFolder}/JiraWorklogSubmitter/JiraWorklogSubmitter/bin/Debug/net5.0/JiraWorklogSubmitter.dll",
             "args": [],
             "cwd": "${workspaceFolder}/JiraWorklogSubmitter/JiraWorklogSubmitter",
             "stopAtEntry": false,
