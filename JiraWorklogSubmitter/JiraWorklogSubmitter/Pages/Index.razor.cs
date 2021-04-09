@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Components.Web;
 
 namespace JiraWorklogSubmitter.Pages
 {
@@ -91,6 +92,17 @@ namespace JiraWorklogSubmitter.Pages
             }
 
             _totalTimeSpent = totalTimeSpan.ToString();
+        }
+
+        private void GlobalKeyChecker(KeyboardEventArgs keyboardEventArgs)
+        {
+            Console.WriteLine($"Key heard: {keyboardEventArgs.Key}");
+
+            if (keyboardEventArgs.CtrlKey && keyboardEventArgs.Key == "+")
+            {
+                Console.WriteLine($"Heard command to add new entry.");
+                AddNewTimeEntry();
+            }
         }
     }
 }

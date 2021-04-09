@@ -16,7 +16,7 @@
 }
 else
 {
-    <EditForm Model="_jiraWorklogEntries" OnValidSubmit="HandleValidSubmitAsync">
+    <EditForm Model="_jiraWorklogEntries" OnValidSubmit="HandleValidSubmitAsync" @onkeydown="@GlobalKeyChecker">
         <DataAnnotationsValidator />
         <ValidationSummary />
         <div class="d-flex justify-content-between">
