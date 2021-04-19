@@ -98,7 +98,7 @@ namespace JiraWorklogSubmitter.Pages
         {
             Console.WriteLine($"Key heard: {keyboardEventArgs.Key}");
 
-            if (keyboardEventArgs.CtrlKey && keyboardEventArgs.Key == "+")
+            if (keyboardEventArgs.CtrlKey && keyboardEventArgs.Key == ",")
             {
                 Console.WriteLine($"Heard command to add new entry.");
                 AddNewTimeEntry();
