@@ -36,7 +36,9 @@
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
-            "problemMatcher": "$msCompile"
+            "problemMatcher": "$msCompile",
+            // In order for watch to work as a launch option in launch.json, we need to point it to the folder where the .csproj file is
+            "options": { "cwd": "${workspaceFolder}/JiraWorklogSubmitter/JiraWorklogSubmitter/"}
         }
     ]
 }
