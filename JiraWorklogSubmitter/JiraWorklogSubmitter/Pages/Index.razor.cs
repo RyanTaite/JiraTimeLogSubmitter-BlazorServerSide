@@ -96,8 +96,6 @@ namespace JiraWorklogSubmitter.Pages
 
         private void GlobalKeyChecker(KeyboardEventArgs keyboardEventArgs)
         {
-            Console.WriteLine($"Key heard: {keyboardEventArgs.Key}");
-
             if (keyboardEventArgs.CtrlKey && keyboardEventArgs.Key == ",")
             {
                 Console.WriteLine($"Heard command to add new entry.");
